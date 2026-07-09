@@ -94,7 +94,7 @@ export function parseTimetableFile(fileBuffer: ArrayBuffer): ParsedClass[] {
 
 // Tries to detect a week label from the filename, e.g. "06_07_2026_to_12_07_2026.xlsx"
 export function detectWeekLabel(filename: string): string {
-  const match = filename.match(/(\d{2})_(\d{2})_(\d{4})_to_(\d{2})_(\d{2})_(\d{4})/)
+  const match = filename.match(/(\d{2})[._](\d{2})[._](\d{4})\D+(\d{2})[._](\d{2})[._](\d{4})/)
   if (match) {
     const [, d1, m1, y1, d2, m2, y2] = match
     return `${d1}/${m1}/${y1} - ${d2}/${m2}/${y2}`
