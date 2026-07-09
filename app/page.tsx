@@ -160,6 +160,12 @@ export default function HomePage() {
       >
         📅 Connect Google Calendar
       </button>
+      <a
+       href={`/api/calendar-feed?section=${section}&mcDivision=${division}`}
+        className="block px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 text-center"
+      >
+        📱 Subscribe with Apple Calendar / Outlook
+      </a>
 
       {currentClass && (
         <div className="rounded-2xl border border-green-300 bg-green-50 p-5 space-y-1">
