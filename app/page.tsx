@@ -39,6 +39,7 @@ export default function HomePage() {
   const [classes, setClasses] = useState<ClassEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [now, setNow] = useState(new Date())
+  const [calendarStatus, setCalendarStatus] = useState<string | null>(null)
 
   // Redirect to onboarding if no preferences saved yet
   useEffect(() => {
@@ -46,11 +47,28 @@ export default function HomePage() {
     const savedDivision = localStorage.getItem('timely_division')
     if (!savedSection || !savedDivision) {
       router.push('/onboarding')
-    } else {
-      setSection(savedSection)
-      setDivision(savedDivision)
+      return
     }
+    setSection(savedSection)
+    setDivision(savedDivision)
+
+    // Create a persistent random device ID if one doesn't exist yet
+    if (!localStorage.getItem('timely_device_id')) {
+      localStorage.setItem('timely_device_id', crypto.randomUUID())
+    }
+
+    const params = new URLSearchParams(window.location.search)
+    const calParam = params.get('calendar')
+    if (calParam === 'connected') setCalendarStatus('✅ Google Calendar connected!')
+    if (calParam === 'error') setCalendarStatus('❌ Something went wrong connecting your calendar.')
+    if (calParam === 'noRefreshToken')
+      setCalendarStatus('⚠️ Please try connecting again (Google needs a fresh consent).')
   }, [router])
+
+  function connectGoogleCalendar() {
+    const deviceId = localStorage.getItem('timely_device_id')
+    window.location.href = `/api/auth/google?deviceId=${deviceId}&section=${section}&mcDivision=${division}&t=${Date.now()}`
+  }
 
   // Tick the clock every 30 seconds for the live countdown
   useEffect(() => {
@@ -129,6 +147,19 @@ export default function HomePage() {
           View full week →
         </a>
       </div>
+
+      {calendarStatus && (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm">
+          {calendarStatus}
+        </div>
+      )}
+
+      <button
+        onClick={connectGoogleCalendar}
+        className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50"
+      >
+        📅 Connect Google Calendar
+      </button>
 
       {currentClass && (
         <div className="rounded-2xl border border-green-300 bg-green-50 p-5 space-y-1">
