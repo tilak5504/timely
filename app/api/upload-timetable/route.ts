@@ -13,6 +13,11 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
     const file = formData.get('file') as File | null
+    const password = formData.get('password') as string | null
+
+    if (password !== process.env.ADMIN_PASSWORD) {
+      return NextResponse.json({ error: 'Incorrect admin password' }, { status: 401 })
+    }
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })

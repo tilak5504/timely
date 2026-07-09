@@ -125,6 +125,9 @@ export default function HomePage() {
         <p className="text-muted-foreground">
           Section {section} · Division {division}
         </p>
+        <a href="/week" className="text-sm text-blue-600 underline">
+          View full week →
+        </a>
       </div>
 
       {currentClass && (
