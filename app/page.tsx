@@ -154,12 +154,17 @@ export default function HomePage() {
         </div>
       )}
 
-      <button
-        onClick={connectGoogleCalendar}
-        className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50"
-      >
-        📅 Connect Google Calendar
-      </button>
+      <div className="space-y-1">
+        <button
+          onClick={connectGoogleCalendar}
+          className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 w-full"
+        >
+          📅 Connect Google Calendar
+        </button>
+        <p className="text-xs text-gray-400">
+          You may see an "unverified app" warning — click "Advanced" → "Go to Timely (unsafe)" to continue. This is expected and safe.
+        </p>
+      </div>
       <a
        href={`/api/calendar-feed?section=${section}&mcDivision=${division}`}
         className="block px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 text-center"
