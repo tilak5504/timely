@@ -69,6 +69,11 @@ export default function HomePage() {
     const deviceId = localStorage.getItem('timely_device_id')
     window.location.href = `/api/auth/google?deviceId=${deviceId}&section=${section}&mcDivision=${division}&t=${Date.now()}`
   }
+  function switchSection() {
+    localStorage.removeItem('timely_section')
+    localStorage.removeItem('timely_division')
+    router.push('/onboarding')
+  }
 
   // Tick the clock every 30 seconds for the live countdown
   useEffect(() => {
@@ -143,9 +148,17 @@ export default function HomePage() {
         <p className="text-muted-foreground">
           Section {section} · Division {division}
         </p>
-        <a href="/week" className="text-sm text-blue-600 underline">
-          View full week →
-        </a>
+        <div className="flex items-center gap-3">
+          <a href="/week" className="text-sm text-blue-600 underline">
+            View full week →
+          </a>
+          <button
+            onClick={switchSection}
+            className="text-sm text-gray-400 underline"
+          >
+            Switch section
+          </button>
+        </div>
       </div>
 
       {calendarStatus && (
