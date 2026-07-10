@@ -24,29 +24,28 @@ export function getAuthUrl(deviceId: string, section: string, mcDivision: string
     state,
   })
 }
-const DAY_OFFSETS: Record<string, number> = {
-  Sunday: 0,
-  Monday: 1,
-  Tuesday: 2,
-  Wednesday: 3,
-  Thursday: 4,
-  Friday: 5,
-  Saturday: 6,
+const DAY_OFFSET_FROM_MONDAY: Record<string, number> = {
+  Monday: 0,
+  Tuesday: 1,
+  Wednesday: 2,
+  Thursday: 3,
+  Friday: 4,
+  Saturday: 5,
 }
 
-function nextDateForDay(day: string): Date {
-  const today = new Date()
-  const todayDay = today.getDay()
-  const targetDay = DAY_OFFSETS[day]
-  let diff = targetDay - todayDay
-  if (diff < 0) diff += 7
-  const result = new Date(today)
-  result.setDate(today.getDate() + diff)
-  return result
+// weekLabel looks like "06/07/2026 - 12/07/2026" (DD/MM/YYYY)
+function getWeekMonday(weekLabel: string): Date {
+  const [startPart] = weekLabel.split(' - ')
+  const [d, m, y] = startPart.split('/').map(Number)
+  return new Date(y, m - 1, d)
 }
 
-function buildDateTimeString(day: string, time: string) {
-  const date = nextDateForDay(day)
+function buildDateTimeString(weekLabel: string, day: string, time: string) {
+  const monday = getWeekMonday(weekLabel)
+  const offset = DAY_OFFSET_FROM_MONDAY[day] ?? 0
+  const date = new Date(monday)
+  date.setDate(monday.getDate() + offset)
+
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const dayOfMonth = String(date.getDate()).padStart(2, '0')
@@ -107,9 +106,8 @@ export async function syncCalendarForDevice(deviceId: string) {
 
   let created = 0
   for (const cls of classes) {
-    const startDateTime = buildDateTimeString(cls.day, cls.start_time)
-    const endDateTime = buildDateTimeString(cls.day, cls.end_time)
-
+    const startDateTime = buildDateTimeString(latestWeek.week_label, cls.day, cls.start_time)
+    const endDateTime = buildDateTimeString(latestWeek.week_label, cls.day, cls.end_time)
     const event = await calendar.events.insert({
       calendarId: 'primary',
       requestBody: {

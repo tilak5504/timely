@@ -8,29 +8,27 @@ const supabaseAdmin = createClient(
 
 export const dynamic = 'force-dynamic'
 
-const DAY_OFFSETS: Record<string, number> = {
-  Sunday: 0,
-  Monday: 1,
-  Tuesday: 2,
-  Wednesday: 3,
-  Thursday: 4,
-  Friday: 5,
-  Saturday: 6,
+const DAY_OFFSET_FROM_MONDAY: Record<string, number> = {
+  Monday: 0,
+  Tuesday: 1,
+  Wednesday: 2,
+  Thursday: 3,
+  Friday: 4,
+  Saturday: 5,
 }
 
-function nextDateForDay(day: string): Date {
-  const today = new Date()
-  const todayDay = today.getDay()
-  const targetDay = DAY_OFFSETS[day]
-  let diff = targetDay - todayDay
-  if (diff < 0) diff += 7
-  const result = new Date(today)
-  result.setDate(today.getDate() + diff)
-  return result
+function getWeekMonday(weekLabel: string): Date {
+  const [startPart] = weekLabel.split(' - ')
+  const [d, m, y] = startPart.split('/').map(Number)
+  return new Date(y, m - 1, d)
 }
 
-function toIcsDateTime(day: string, time: string) {
-  const date = nextDateForDay(day)
+function toIcsDateTime(weekLabel: string, day: string, time: string) {
+  const monday = getWeekMonday(weekLabel)
+  const offset = DAY_OFFSET_FROM_MONDAY[day] ?? 0
+  const date = new Date(monday)
+  date.setDate(monday.getDate() + offset)
+
   const [h, m] = time.split(':').map(Number)
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -55,20 +53,23 @@ export async function GET(req: NextRequest) {
     .limit(1)
     .single()
 
-  let classes: any[] = []
-  if (latestWeek) {
-    const { data } = await supabaseAdmin
-      .from('timetable_entries')
-      .select('*')
-      .eq('week_label', latestWeek.week_label)
-      .or(`section.eq.${section},mc_division.eq.${mcDivision}`)
-    classes = data || []
+  if (!latestWeek) {
+    return new NextResponse('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR', {
+      headers: { 'Content-Type': 'text/calendar; charset=utf-8' },
+    })
   }
+
+  const { data } = await supabaseAdmin
+    .from('timetable_entries')
+    .select('*')
+    .eq('week_label', latestWeek.week_label)
+    .or(`section.eq.${section},mc_division.eq.${mcDivision}`)
+  const classes = data || []
 
   const events = classes
     .map((cls) => {
-      const start = toIcsDateTime(cls.day, cls.start_time)
-      const end = toIcsDateTime(cls.day, cls.end_time)
+      const start = toIcsDateTime(latestWeek.week_label, cls.day, cls.start_time)
+      const end = toIcsDateTime(latestWeek.week_label, cls.day, cls.end_time)
       return [
         'BEGIN:VEVENT',
         `UID:${cls.id}@timely`,
