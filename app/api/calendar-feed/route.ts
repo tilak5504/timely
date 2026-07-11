@@ -53,10 +53,14 @@ export async function GET(req: NextRequest) {
     .limit(1)
     .single()
 
+  await supabaseAdmin.from('analytics_events').insert({
+    event_type: 'ics_fetch',
+    section,
+    mc_division: mcDivision,
+  })
+
   if (!latestWeek) {
-    return new NextResponse('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR', {
-      headers: { 'Content-Type': 'text/calendar; charset=utf-8' },
-    })
+    return NextResponse.json({ error: 'No timetable entries found' }, { status: 404 })
   }
 
   const { data } = await supabaseAdmin

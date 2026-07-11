@@ -57,6 +57,31 @@ export default function HomePage() {
       localStorage.setItem('timely_device_id', crypto.randomUUID())
     }
 
+    // Record this visit for analytics (fire-and-forget, doesn't block the page)
+    const deviceId = localStorage.getItem('timely_device_id')
+    supabase
+      .from('analytics_devices')
+      .upsert(
+        {
+          device_id: deviceId,
+          section: savedSection,
+          mc_division: savedDivision,
+          last_seen: new Date().toISOString(),
+        },
+        { onConflict: 'device_id' }
+      )
+      .then(() => {})
+
+    supabase
+      .from('analytics_events')
+      .insert({
+        device_id: deviceId,
+        event_type: 'pageview',
+        section: savedSection,
+        mc_division: savedDivision,
+      })
+      .then(() => {})
+
     const params = new URLSearchParams(window.location.search)
     const calParam = params.get('calendar')
     if (calParam === 'connected') setCalendarStatus('✅ Google Calendar connected!')

@@ -37,6 +37,12 @@ export async function GET(req: NextRequest) {
     const result = await syncCalendarForDevice(deviceId)
     console.log(`Synced ${result.count} calendar events for device ${deviceId}`)
 
+    await supabaseAdmin.from('analytics_events').insert({
+      device_id: deviceId,
+      event_type: 'calendar_connected',
+      section,
+      mc_division: mcDivision,
+    })
     return NextResponse.redirect(new URL('/?calendar=connected', req.url))
   } catch (err: any) {
     console.error('Calendar sync error:', err)
