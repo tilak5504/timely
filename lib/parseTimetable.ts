@@ -101,3 +101,38 @@ export function detectWeekLabel(filename: string): string {
   }
   return 'Unknown week'
 }
+
+// Given a weekLabel like "06/07/2026 - 12/07/2026", returns its start/end dates
+export function parseWeekRange(weekLabel: string): { start: Date; end: Date } | null {
+  const match = weekLabel.match(/(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2})\/(\d{2})\/(\d{4})/)
+  if (!match) return null
+  const [, d1, m1, y1, d2, m2, y2] = match
+  const start = new Date(Number(y1), Number(m1) - 1, Number(d1))
+  const end = new Date(Number(y2), Number(m2) - 1, Number(d2), 23, 59, 59)
+  return { start, end }
+}
+
+// Picks the week label that actually contains today's date.
+// Falls back to the most recent past week, or the nearest future week, if no exact match.
+export function pickCurrentWeekLabel(weekLabels: string[]): string | null {
+  if (weekLabels.length === 0) return null
+  const today = new Date()
+
+  const parsed = weekLabels
+    .map((label) => ({ label, range: parseWeekRange(label) }))
+    .filter((w) => w.range !== null) as { label: string; range: { start: Date; end: Date } }[]
+
+  const exactMatch = parsed.find((w) => today >= w.range.start && today <= w.range.end)
+  if (exactMatch) return exactMatch.label
+
+  // No exact match (e.g. gap between uploads) — pick the most recent week that already started
+  const pastWeeks = parsed.filter((w) => w.range.start <= today)
+  if (pastWeeks.length > 0) {
+    pastWeeks.sort((a, b) => b.range.start.getTime() - a.range.start.getTime())
+    return pastWeeks[0].label
+  }
+
+  // Everything is in the future — pick the nearest upcoming week
+  parsed.sort((a, b) => a.range.start.getTime() - b.range.start.getTime())
+  return parsed[0]?.label ?? weekLabels[0]
+}

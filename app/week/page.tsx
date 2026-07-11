@@ -1,5 +1,6 @@
 'use client'
 
+import { pickCurrentWeekLabel } from '@/lib/parseTimetable'
 import { useEffect, useState, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -63,14 +64,19 @@ export default function WeekPage() {
     async function fetchWeek() {
       if (!section || !division) return
 
-      const { data: latestWeek } = await supabase
+      const { data: allWeeks } = await supabase
         .from('timetable_entries')
         .select('week_label')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
 
-      if (!latestWeek) {
+      if (!allWeeks || allWeeks.length === 0) {
+        setLoading(false)
+        return
+      }
+
+      const uniqueWeekLabels = Array.from(new Set(allWeeks.map((w) => w.week_label)))
+      const currentWeekLabel = pickCurrentWeekLabel(uniqueWeekLabels)
+
+      if (!currentWeekLabel) {
         setLoading(false)
         return
       }
@@ -78,7 +84,7 @@ export default function WeekPage() {
       const { data, error } = await supabase
         .from('timetable_entries')
         .select('*')
-        .eq('week_label', latestWeek.week_label)
+        .eq('week_label', currentWeekLabel)
         .or(`section.eq.${section},mc_division.eq.${division}`)
 
       if (!error && data) {
