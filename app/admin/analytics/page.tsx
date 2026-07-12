@@ -20,6 +20,9 @@ interface AnalyticsData {
     mc_division: string | null
     created_at: string
   }[]
+  platformTotals: Record<string, number>
+  googleByPlatform: Record<string, number>
+  icsByPlatform: Record<string, number>
 }
 
 const EVENT_LABELS: Record<string, string> = {
@@ -161,6 +164,40 @@ export default function AnalyticsPage() {
         <div className="rounded-xl border p-4">
           <p className="text-3xl font-semibold">{data.icsFetchCount}</p>
           <p className="text-sm text-gray-500">Apple/Outlook syncs</p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          Calendar Adoption by Platform
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {Object.entries(data.platformTotals).map(([platform, total]) => {
+            const google = data.googleByPlatform[platform] || 0
+            const ics = data.icsByPlatform[platform] || 0
+            const adoptionRate = total > 0 ? Math.round(((google + ics) / total) * 100) : 0
+            return (
+              <div key={platform} className="rounded-xl border p-4 space-y-2">
+                <p className="font-semibold">{platform}</p>
+                <p className="text-2xl font-semibold">{total}</p>
+                <p className="text-xs text-gray-500">students</p>
+                <div className="pt-2 space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">📅 Google</span>
+                    <span>{google}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">📱 Apple/Outlook</span>
+                    <span>{ics}</span>
+                  </div>
+                  <div className="flex justify-between font-medium pt-1 border-t">
+                    <span>Adoption rate</span>
+                    <span>{adoptionRate}%</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
