@@ -57,9 +57,16 @@ export default function HomePage() {
     if (!localStorage.getItem('timely_device_id')) {
       localStorage.setItem('timely_device_id', crypto.randomUUID())
     }
+ function detectPlatform(): string {
+      const ua = navigator.userAgent
+      if (/iPhone|iPad|iPod/i.test(ua)) return 'iOS'
+      if (/Android/i.test(ua)) return 'Android'
+      return 'Desktop'
+    }
 
     // Record this visit for analytics (fire-and-forget, doesn't block the page)
     const deviceId = localStorage.getItem('timely_device_id')
+    const platform = detectPlatform()
     supabase
       .from('analytics_devices')
       .upsert(
@@ -68,6 +75,7 @@ export default function HomePage() {
           section: savedSection,
           mc_division: savedDivision,
           last_seen: new Date().toISOString(),
+          platform,
         },
         { onConflict: 'device_id' }
       )
@@ -80,6 +88,7 @@ export default function HomePage() {
         event_type: 'pageview',
         section: savedSection,
         mc_division: savedDivision,
+        platform,
       })
       .then(() => {})
 
@@ -210,7 +219,7 @@ export default function HomePage() {
         </p>
       </div>
       <a
-       href={`/api/calendar-feed?section=${section}&mcDivision=${division}`}
+       href={`/api/calendar-feed?section=${section}&mcDivision=${division}&deviceId=${localStorage.getItem('timely_device_id')}`}
         className="block px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 text-center"
       >
         📱 Subscribe with Apple Calendar / Outlook

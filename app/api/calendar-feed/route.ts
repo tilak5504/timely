@@ -41,6 +41,7 @@ function toIcsDateTime(weekLabel: string, day: string, time: string) {
 export async function GET(req: NextRequest) {
   const section = req.nextUrl.searchParams.get('section')
   const mcDivision = req.nextUrl.searchParams.get('mcDivision')
+  const deviceId = req.nextUrl.searchParams.get('deviceId')
 
   if (!section || !mcDivision) {
     return NextResponse.json({ error: 'Missing section or mcDivision' }, { status: 400 })
@@ -53,10 +54,22 @@ export async function GET(req: NextRequest) {
     .limit(1)
     .single()
 
+  let platform: string | null = null
+  if (deviceId) {
+    const { data: deviceRow } = await supabaseAdmin
+      .from('analytics_devices')
+      .select('platform')
+      .eq('device_id', deviceId)
+      .single()
+    platform = deviceRow?.platform ?? null
+  }
+
   await supabaseAdmin.from('analytics_events').insert({
+    device_id: deviceId,
     event_type: 'ics_fetch',
     section,
     mc_division: mcDivision,
+    platform,
   })
 
   if (!latestWeek) {

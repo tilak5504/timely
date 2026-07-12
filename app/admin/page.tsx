@@ -1,47 +1,94 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-export default function AdminPage() {
+interface AnalyticsData {
+  totalDevices: number
+  activeNow: number
+  activeToday: number
+  activeThisWeek: number
+  calendarConnections: number
+  icsFetchCount: number
+  bySection: Record<string, number>
+  byDivision: Record<string, number>
+  signupsByDay: Record<string, number>
+  recentEvents: {
+    id: string
+    device_id: string | null
+    event_type: string
+    section: string | null
+    mc_division: string | null
+    created_at: string
+  }[]
+  platformTotals: Record<string, number>
+  googleByPlatform: Record<string, number>
+  icsByPlatform: Record<string, number>
+}
+
+const EVENT_LABELS: Record<string, string> = {
+  pageview: '👀 Opened app',
+  calendar_connected: '📅 Connected Google Calendar',
+  ics_fetch: '📱 Apple/Outlook synced',
+}
+
+function timeAgo(dateStr: string) {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (seconds < 60) return 'just now'
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+  return `${Math.floor(seconds / 86400)}d ago`
+}
+
+export default function AnalyticsPage() {
   const [password, setPassword] = useState('')
   const [authed, setAuthed] = useState(false)
-  const [authError, setAuthError] = useState('')
+  const [data, setData] = useState<AnalyticsData | null>(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const passwordRef = useRef('')
 
-  const [file, setFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [result, setResult] = useState<{ success?: boolean; count?: number; weekLabel?: string; error?: string } | null>(null)
-
-  function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
-    // Simple client-side check just to gate the UI.
-    // The actual security is enforced server-side in the upload API route.
-    setAuthed(true)
-    setAuthError('')
-  }
-
-  async function handleUpload() {
-    if (!file) return
-    setUploading(true)
-    setResult(null)
-
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('password', password)
-
-    const res = await fetch('/api/upload-timetable', {
+  async function fetchAnalytics(pw: string) {
+    const res = await fetch('/api/admin-analytics', {
       method: 'POST',
-      body: formData,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
     })
-    const data = await res.json()
-    setUploading(false)
-    setResult(data)
+    const result = await res.json()
+    if (result.error) {
+      setError(result.error)
+      return false
+    }
+    setData(result)
+    setLastUpdated(new Date())
+    return true
   }
 
-  if (!authed) {
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const ok = await fetchAnalytics(password)
+    setLoading(false)
+    if (ok) {
+      passwordRef.current = password
+      setAuthed(true)
+    }
+  }
+
+  useEffect(() => {
+    if (!authed) return
+    const interval = setInterval(() => {
+      fetchAnalytics(passwordRef.current)
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [authed])
+
+  if (!authed || !data) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
         <form onSubmit={handleLogin} className="space-y-4 w-full max-w-sm">
-          <h1 className="text-2xl font-semibold text-center">Admin Login</h1>
+          <h1 className="text-2xl font-semibold text-center">Analytics Login</h1>
           <input
             type="password"
             placeholder="Admin password"
@@ -49,55 +96,193 @@ export default function AdminPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border rounded-lg px-4 py-2"
           />
-          {authError && <p className="text-red-500 text-sm">{authError}</p>}
-          <button type="submit" className="w-full bg-black text-white rounded-lg py-2">
-            Continue
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white rounded-lg py-2 disabled:opacity-50"
+          >
+            {loading ? 'Loading...' : 'View Analytics'}
           </button>
         </form>
       </div>
     )
   }
 
+  const sections = Object.entries(data.bySection).sort((a, b) => b[1] - a[1])
+  const divisions = Object.entries(data.byDivision).sort((a, b) => a[0].localeCompare(b[0]))
+  const maxSectionCount = Math.max(...sections.map(([, count]) => count), 1)
+
+  const signupDays = Object.entries(data.signupsByDay)
+  const maxSignups = Math.max(...signupDays.map(([, count]) => count), 1)
+
   return (
-    <div className="min-h-screen p-6 max-w-xl mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold">Upload Weekly Timetable</h1>
-      <p className="text-sm text-gray-500">
-        Upload the .xlsx file from the course coordinator. This will replace any existing data for
-        the same week.
-      </p>
-
-      <input
-        type="file"
-        accept=".xlsx"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
-        className="block"
-      />
-
-      <button
-        onClick={handleUpload}
-        disabled={!file || uploading}
-        className="px-5 py-2 rounded-lg bg-black text-white disabled:opacity-40"
-      >
-        {uploading ? 'Uploading...' : 'Upload Timetable'}
-      </button>
-
-      {result && (
-        <div
-          className={`rounded-xl border p-4 ${
-            result.error ? 'border-red-300 bg-red-50' : 'border-green-300 bg-green-50'
-          }`}
-        >
-          {result.error ? (
-            <p className="text-red-700">❌ {result.error}</p>
-          ) : (
-            <div className="text-green-800 space-y-1">
-              <p>✅ Upload successful</p>
-              <p>Week detected: {result.weekLabel}</p>
-              <p>Classes parsed: {result.count}</p>
-            </div>
-          )}
+    <div className="min-h-screen p-6 max-w-4xl mx-auto space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Timely Analytics</h1>
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          Live · updated {lastUpdated ? timeAgo(lastUpdated.toISOString()) : ''}
         </div>
-      )}
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="rounded-xl border p-4">
+          <p className="text-3xl font-semibold">{data.totalDevices}</p>
+          <p className="text-sm text-gray-500">Total students onboarded</p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="text-3xl font-semibold flex items-center gap-2">
+            {data.activeNow}
+            {data.activeNow > 0 && (
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            )}
+          </p>
+          <p className="text-sm text-gray-500">Active right now (5 min)</p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="text-3xl font-semibold">{data.activeToday}</p>
+          <p className="text-sm text-gray-500">Active today</p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="text-3xl font-semibold">{data.activeThisWeek}</p>
+          <p className="text-sm text-gray-500">Active this week</p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="text-3xl font-semibold">{data.calendarConnections}</p>
+          <p className="text-sm text-gray-500">Google Calendar connections</p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="text-3xl font-semibold">
+            {data.totalDevices > 0
+              ? Math.round((data.calendarConnections / data.totalDevices) * 100)
+              : 0}
+            %
+          </p>
+          <p className="text-sm text-gray-500">Calendar adoption rate</p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="text-3xl font-semibold">{data.icsFetchCount}</p>
+          <p className="text-sm text-gray-500">Apple/Outlook syncs</p>
+        </div>
+      </div>
+
+      {/* Platform breakdown */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          Calendar Adoption by Platform
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {Object.entries(data.platformTotals).map(([platform, total]) => {
+            const google = data.googleByPlatform[platform] || 0
+            const ics = data.icsByPlatform[platform] || 0
+            const adoptionRate = total > 0 ? Math.round(((google + ics) / total) * 100) : 0
+            return (
+              <div key={platform} className="rounded-xl border p-4 space-y-2">
+                <p className="font-semibold">{platform}</p>
+                <p className="text-2xl font-semibold">{total}</p>
+                <p className="text-xs text-gray-500">students</p>
+                <div className="pt-2 space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">📅 Google</span>
+                    <span>{google}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">📱 Apple/Outlook</span>
+                    <span>{ics}</span>
+                  </div>
+                  <div className="flex justify-between font-medium pt-1 border-t">
+                    <span>Adoption rate</span>
+                    <span>{adoptionRate}%</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          Signups — last 14 days
+        </h2>
+        <div className="flex items-end gap-1 h-32">
+          {signupDays.map(([day, count]) => (
+            <div key={day} className="flex-1 flex flex-col items-center gap-1 group relative">
+              <div
+                className="w-full bg-blue-500 rounded-t"
+                style={{ height: `${(count / maxSignups) * 100}%`, minHeight: count > 0 ? '4px' : '0' }}
+              />
+              <span className="text-[9px] text-gray-400">{day.slice(5)}</span>
+              <span className="absolute -top-5 text-xs opacity-0 group-hover:opacity-100 transition bg-black text-white px-1.5 py-0.5 rounded">
+                {count}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">By Section</h2>
+        <div className="space-y-2">
+          {sections.map(([section, count]) => (
+            <div key={section} className="flex items-center gap-3">
+              <span className="w-6 text-sm font-medium">{section}</span>
+              <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full flex items-center px-2"
+                  style={{ width: `${(count / maxSectionCount) * 100}%` }}
+                >
+                  <span className="text-xs text-white font-medium">{count}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          By MC Division
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {divisions.map(([division, count]) => (
+            <div key={division} className="rounded-lg border p-3 flex justify-between">
+              <span className="text-sm font-medium">{division}</span>
+              <span className="text-sm text-gray-500">{count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          Recent Activity
+        </h2>
+        <div className="space-y-1">
+          {data.recentEvents.length === 0 && (
+            <p className="text-sm text-gray-400">No activity yet.</p>
+          )}
+          {data.recentEvents.map((event) => (
+            <div
+              key={event.id}
+              className="flex items-center justify-between text-sm border-b py-2 last:border-0"
+            >
+              <span>
+                {EVENT_LABELS[event.event_type] || event.event_type}
+                {event.section && (
+                  <span className="text-gray-400">
+                    {' '}
+                    · Sec {event.section}
+                    {event.mc_division ? ` / ${event.mc_division}` : ''}
+                  </span>
+                )}
+              </span>
+              <span className="text-gray-400 text-xs">{timeAgo(event.created_at)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
