@@ -20,17 +20,16 @@ export async function POST(req: NextRequest) {
     .from('device_links')
     .select('device_id, section, mc_division, google_refresh_token')
 
+  const { data: icsEvents } = await supabaseAdmin
+    .from('analytics_events')
+    .select('device_id, platform')
+    .eq('event_type', 'ics_fetch')
+
   const { data: recentEvents } = await supabaseAdmin
     .from('analytics_events')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(20)
-
-  const { data: last14DaysEvents } = await supabaseAdmin
-    .from('analytics_events')
-    .select('created_at, event_type')
-    .eq('event_type', 'pageview')
-    .gte('created_at', new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString())
 
   const { count: icsFetchCount } = await supabaseAdmin
     .from('analytics_events')
@@ -48,6 +47,35 @@ export async function POST(req: NextRequest) {
 
   const calendarConnections = (calendarLinks || []).filter((c) => c.google_refresh_token).length
 
+  const platformByDevice: Record<string, string> = {}
+  for (const d of devices || []) {
+    if (d.platform) platformByDevice[d.device_id] = d.platform
+  }
+
+  const platformTotals: Record<string, number> = {}
+  for (const d of devices || []) {
+    const p = d.platform || 'Unknown'
+    platformTotals[p] = (platformTotals[p] || 0) + 1
+  }
+
+  const googleByPlatform: Record<string, number> = {}
+  for (const link of calendarLinks || []) {
+    if (!link.google_refresh_token) continue
+    const p = platformByDevice[link.device_id] || 'Unknown'
+    googleByPlatform[p] = (googleByPlatform[p] || 0) + 1
+  }
+
+  const icsByPlatform: Record<string, number> = {}
+  const icsDevicesByPlatform: Record<string, Set<string>> = {}
+  for (const ev of icsEvents || []) {
+    const p = ev.platform || (ev.device_id ? platformByDevice[ev.device_id] : null) || 'Unknown'
+    if (!icsDevicesByPlatform[p]) icsDevicesByPlatform[p] = new Set()
+    if (ev.device_id) icsDevicesByPlatform[p].add(ev.device_id)
+  }
+  for (const p in icsDevicesByPlatform) {
+    icsByPlatform[p] = icsDevicesByPlatform[p].size
+  }
+
   const now = Date.now()
   const activeNow = (devices || []).filter(
     (d) => now - new Date(d.last_seen).getTime() < 5 * 60 * 1000
@@ -59,7 +87,6 @@ export async function POST(req: NextRequest) {
     (d) => now - new Date(d.last_seen).getTime() < 7 * 24 * 60 * 60 * 1000
   ).length
 
-  // Build a day-by-day signup count for the last 14 days
   const signupsByDay: Record<string, number> = {}
   for (let i = 13; i >= 0; i--) {
     const d = new Date(now - i * 24 * 60 * 60 * 1000)
@@ -82,5 +109,8 @@ export async function POST(req: NextRequest) {
     byDivision,
     signupsByDay,
     recentEvents: recentEvents || [],
+    platformTotals,
+    googleByPlatform,
+    icsByPlatform,
   })
 }
