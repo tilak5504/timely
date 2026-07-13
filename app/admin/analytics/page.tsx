@@ -9,6 +9,8 @@ interface AnalyticsData {
   activeThisWeek: number
   calendarConnections: number
   icsFetchCount: number
+  uniqueIcsDevices: number
+  overallAdoptionRate: number
   bySection: Record<string, number>
   byDivision: Record<string, number>
   signupsByDay: Record<string, number>
@@ -153,13 +155,8 @@ export default function AnalyticsPage() {
           <p className="text-sm text-gray-500">Google Calendar connections</p>
         </div>
         <div className="rounded-xl border p-4">
-          <p className="text-3xl font-semibold">
-            {data.totalDevices > 0
-              ? Math.round((data.calendarConnections / data.totalDevices) * 100)
-              : 0}
-            %
-          </p>
-          <p className="text-sm text-gray-500">Calendar adoption rate</p>
+          <p className="text-3xl font-semibold">{data.overallAdoptionRate}%</p>
+          <p className="text-sm text-gray-500">Calendar adoption rate (Google + Apple/Outlook)</p>
         </div>
         <div className="rounded-xl border p-4">
           <p className="text-3xl font-semibold">{data.icsFetchCount}</p>

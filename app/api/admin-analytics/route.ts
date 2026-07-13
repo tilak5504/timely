@@ -76,6 +76,18 @@ export async function POST(req: NextRequest) {
     icsByPlatform[p] = icsDevicesByPlatform[p].size
   }
 
+  // Combined adoption: any device that connected Google OR subscribed via Apple/Outlook
+  const googleDeviceIds = new Set(
+    (calendarLinks || []).filter((c) => c.google_refresh_token).map((c) => c.device_id)
+  )
+  const icsDeviceIds = new Set(
+    (icsEvents || []).filter((e) => e.device_id).map((e) => e.device_id as string)
+  )
+  const combinedAdoptedDevices = new Set([...googleDeviceIds, ...icsDeviceIds])
+  const uniqueIcsDevices = icsDeviceIds.size
+  const overallAdoptionRate =
+    totalDevices > 0 ? Math.round((combinedAdoptedDevices.size / totalDevices) * 100) : 0
+
   const now = Date.now()
   const activeNow = (devices || []).filter(
     (d) => now - new Date(d.last_seen).getTime() < 5 * 60 * 1000
@@ -105,6 +117,8 @@ export async function POST(req: NextRequest) {
     activeThisWeek,
     calendarConnections,
     icsFetchCount: icsFetchCount || 0,
+    uniqueIcsDevices,
+    overallAdoptionRate,
     bySection,
     byDivision,
     signupsByDay,
