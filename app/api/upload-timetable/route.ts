@@ -24,8 +24,21 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = await file.arrayBuffer()
-    const entries = parseTimetableFile(buffer)
-    const weekLabel = detectWeekLabel(file.name)
+const entries = parseTimetableFile(buffer)
+
+console.log(
+  entries
+    .filter((e) => e.day === 'Friday')
+    .map((e) => ({
+      subject: e.subject,
+      section: e.section,
+      mcDivision: e.mcDivision,
+      start: e.startTime,
+      end: e.endTime,
+    }))
+)
+
+const weekLabel = detectWeekLabel(file.name)
 
     // Clear out any existing entries for this week before inserting fresh ones
     await supabaseAdmin.from('timetable_entries').delete().eq('week_label', weekLabel)

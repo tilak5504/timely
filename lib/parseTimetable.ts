@@ -24,10 +24,11 @@ const DAY_ROWS: [string, number, number][] = [
 
 // Each time slot maps to 3 columns (0-indexed) where parallel classes are listed
 const SLOTS: [string, string, number[]][] = [
-  ['09:30', '11:00', [1, 2, 3]],
-  ['11:15', '12:45', [4, 5, 6]],
-  ['13:45', '15:15', [8, 9, 10]],
-  ['15:30', '17:00', [11, 12, 13]],
+  ['08:30', '10:00', [1, 2]],
+  ['09:30', '11:00', [3, 4, 5]],
+  ['11:15', '12:45', [6, 7, 8]],
+  ['13:45', '15:15', [10, 11, 12]],
+  ['15:30', '17:00', [13, 14]],
 ]
 
 function parseCell(raw: string): Omit<ParsedClass, 'day' | 'startTime' | 'endTime'> | null {
@@ -46,7 +47,7 @@ function parseCell(raw: string): Omit<ParsedClass, 'day' | 'startTime' | 'endTim
   const room = cleanLines[cleanLines.length - 1]
   const faculty = cleanLines.length >= 3 ? cleanLines[1] : 'TBA'
 
-  const divMatch = subjectDivLine.match(/Div\s*-?\s*([A-E])\s*(\d)?/i)
+  const divMatch = subjectDivLine.match(/Div\s*-?\s*([A-E])\s*-?\s*(\d)?/i)
   const divisionCode = divMatch ? (divMatch[1] + (divMatch[2] ?? '')).toUpperCase() : null
   const subject = subjectDivLine.split(/-?\s*Div/i)[0].trim().replace(/-$/, '').trim()
 

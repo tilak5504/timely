@@ -19,12 +19,12 @@ interface ClassEntry {
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const TIME_SLOTS = [
-  { label: '9:30 - 11:00', start: '09:30', end: '11:00' },
-  { label: '11:15 - 12:45', start: '11:15', end: '12:45' },
-  { label: '13:45 - 15:15', start: '13:45', end: '15:15' },
-  { label: '15:30 - 17:00', start: '15:30', end: '17:00' },
+  { start: '08:30', end: '10:00', label: '08:30 - 10:00' },
+  { start: '09:30', end: '11:00', label: '09:30 - 11:00' },
+  { start: '11:15', end: '12:45', label: '11:15 - 12:45' },
+  { start: '13:45', end: '15:15', label: '13:45 - 15:15' },
+  { start: '15:30', end: '17:00', label: '15:30 - 17:00' },
 ]
-
 const SUBJECT_COLORS: Record<string, string> = {
   'MC-I': 'bg-purple-100 border-purple-300 text-purple-900',
   ME: 'bg-blue-100 border-blue-300 text-blue-900',
@@ -46,7 +46,7 @@ export default function WeekPage() {
   const [division, setDivision] = useState<string | null>(null)
   const [classes, setClasses] = useState<ClassEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState<ClassEntry | null>(null)
+const [selected, setSelected] = useState<ClassEntry | null>(null)
 
   useEffect(() => {
     const savedSection = localStorage.getItem('timely_section')
@@ -78,14 +78,18 @@ export default function WeekPage() {
       const currentWeekLabel = latestWeek.week_label
 
       const { data, error } = await supabase
-        .from('timetable_entries')
-        .select('*')
-        .eq('week_label', currentWeekLabel)
-        .or(`section.eq.${section},mc_division.eq.${division}`)
+  .from('timetable_entries')
+  .select('*')
+  .eq('week_label', currentWeekLabel)
+  .or(`section.eq.${section},mc_division.eq.${division}`)
+
+console.log('Current Week:', currentWeekLabel)
+console.log('Fetched Classes:', data)
 
       if (!error && data) {
-        setClasses(data as ClassEntry[])
-      }
+  console.log('TIMETABLE DATA', data)
+  setClasses(data as ClassEntry[])
+}
       setLoading(false)
     }
     fetchWeek()
