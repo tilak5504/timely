@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { getCurrentOrNextMeal, getTodayMenu } from '@/lib/messMenu'
 
 interface ClassEntry {
   id: string
@@ -40,8 +41,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [now, setNow] = useState(new Date())
   const [calendarStatus, setCalendarStatus] = useState<string | null>(null)
+  const [mealInfo, setMealInfo] = useState<ReturnType<typeof getCurrentOrNextMeal> | null>(null)
+  const [deviceIdState, setDeviceIdState] = useState('')
 
-  // Redirect to onboarding if no preferences saved yet
   useEffect(() => {
     const savedSection = localStorage.getItem('timely_section')
     const savedDivision = localStorage.getItem('timely_division')
@@ -52,18 +54,18 @@ export default function HomePage() {
     setSection(savedSection)
     setDivision(savedDivision)
 
-    // Create a persistent random device ID if one doesn't exist yet
     if (!localStorage.getItem('timely_device_id')) {
       localStorage.setItem('timely_device_id', crypto.randomUUID())
     }
- function detectPlatform(): string {
+    setDeviceIdState(localStorage.getItem('timely_device_id') || '')
+
+    function detectPlatform(): string {
       const ua = navigator.userAgent
       if (/iPhone|iPad|iPod/i.test(ua)) return 'iOS'
       if (/Android/i.test(ua)) return 'Android'
       return 'Desktop'
     }
 
-    // Record this visit for analytics (fire-and-forget, doesn't block the page)
     const deviceId = localStorage.getItem('timely_device_id')
     const platform = detectPlatform()
     supabase
@@ -93,36 +95,38 @@ export default function HomePage() {
 
     const params = new URLSearchParams(window.location.search)
     const calParam = params.get('calendar')
-    if (calParam === 'connected') setCalendarStatus('✅ Google Calendar connected!')
-    if (calParam === 'error') setCalendarStatus('❌ Something went wrong connecting your calendar.')
+    if (calParam === 'connected') setCalendarStatus('Google Calendar connected!')
+    if (calParam === 'error') setCalendarStatus('Something went wrong connecting your calendar.')
     if (calParam === 'noRefreshToken')
-      setCalendarStatus('⚠️ Please try connecting again (Google needs a fresh consent).')
+      setCalendarStatus('Please try connecting again (Google needs a fresh consent).')
   }, [router])
 
   function connectGoogleCalendar() {
     const deviceId = localStorage.getItem('timely_device_id')
     window.location.href = `/api/auth/google?deviceId=${deviceId}&section=${section}&mcDivision=${division}&t=${Date.now()}`
   }
+
   function switchSection() {
     localStorage.removeItem('timely_section')
     localStorage.removeItem('timely_division')
     router.push('/onboarding')
   }
 
-  // Tick the clock every 30 seconds for the live countdown
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 30000)
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch today's classes once we know the student's section/division
+  useEffect(() => {
+    setMealInfo(getCurrentOrNextMeal(now))
+  }, [now])
+
   useEffect(() => {
     async function fetchClasses() {
       if (!section || !division) return
 
       const today = DAYS[new Date().getDay()]
 
-      // Always show whichever week was most recently uploaded
       const { data: latestWeek } = await supabase
         .from('timetable_entries')
         .select('week_label')
@@ -176,79 +180,54 @@ export default function HomePage() {
     countdownText = formatCountdown(msUntil)
   }
 
+  const icsHref = '/api/calendar-feed?section=' + section + '&mcDivision=' + division + '&deviceId=' + deviceIdState
+  const todayMenu = getTodayMenu(now)
+
   return (
     <div className="min-h-screen p-6 max-w-2xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-semibold">{greeting} 👋</h1>
-        <p className="text-muted-foreground">
-          Section {section} · Division {division}
-        </p>
+        <p className="text-muted-foreground">Section {section} · Division {division}</p>
         <div className="flex items-center gap-3">
-          <a href="/week" className="text-sm text-blue-600 underline">
-            View full week →
-          </a>
-          <button
-            onClick={switchSection}
-            className="text-sm text-gray-400 underline"
-          >
-            Switch section
-          </button>
+          <a href="/week" className="text-sm text-blue-600 underline">View full week →</a>
+          <button onClick={switchSection} className="text-sm text-gray-400 underline">Switch section</button>
         </div>
       </div>
 
+      {mealInfo && mealInfo.meal && (
+        <a href="/mess" className="block rounded-2xl border border-orange-200 bg-orange-50 p-4 space-y-1 hover:opacity-90 transition">
+          <p className="text-xs font-medium text-orange-700 uppercase tracking-wide">{mealInfo.status === 'current' ? 'Mess open now' : 'Next up'} · {mealInfo.label!.charAt(0).toUpperCase() + mealInfo.label!.slice(1)}</p>
+          <p className="text-sm text-gray-600">{mealInfo.timeLabel}</p>
+          <p className="text-xs text-blue-600 underline">View full week's menu →</p>
+        </a>
+      )}
+
       {calendarStatus && (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm">
-          {calendarStatus}
-        </div>
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm">{calendarStatus}</div>
       )}
 
       <div className="space-y-1">
-        <button
-          onClick={connectGoogleCalendar}
-          className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 w-full"
-        >
-          📅 Connect Google Calendar
-        </button>
-        <p className="text-xs text-gray-400">
-          You may see an "unverified app" warning — click "Advanced" → "Go to Timely (unsafe)" to continue. This is expected and safe.
-        </p>
+        <button onClick={connectGoogleCalendar} className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 w-full">Connect Google Calendar</button>
+        <p className="text-xs text-gray-400">You may see an "unverified app" warning — click "Advanced" then "Go to Timely (unsafe)" to continue. This is expected and safe.</p>
       </div>
-      <a
-       href={`/api/calendar-feed?section=${section}&mcDivision=${division}&deviceId=${localStorage.getItem('timely_device_id')}`}
-        className="block px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 text-center"
-      >
-        📱 Subscribe with Apple Calendar / Outlook
-      </a>
+
+      <a href={icsHref} className="block px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 text-center">Subscribe with Apple Calendar / Outlook</a>
 
       {currentClass && (
         <div className="rounded-2xl border border-green-300 bg-green-50 p-5 space-y-1">
-          <p className="text-xs font-medium text-green-700 uppercase tracking-wide">
-            Happening now
-          </p>
+          <p className="text-xs font-medium text-green-700 uppercase tracking-wide">Happening now</p>
           <p className="text-lg font-semibold">{currentClass.subject}</p>
-          <p className="text-sm text-gray-600">
-            {currentClass.faculty} · {currentClass.room}
-          </p>
-          <p className="text-sm text-gray-500">
-            {currentClass.start_time} - {currentClass.end_time}
-          </p>
+          <p className="text-sm text-gray-600">{currentClass.faculty} · {currentClass.room}</p>
+          <p className="text-sm text-gray-500">{currentClass.start_time} - {currentClass.end_time}</p>
         </div>
       )}
 
       {nextClass && !currentClass && (
         <div className="rounded-2xl border border-blue-300 bg-blue-50 p-5 space-y-1">
-          <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">
-            Next class in {countdownText}
-          </p>
-          <p className="text-lg font-semibold">
-            {nextClass.subject} {nextClass.rescheduled && '⚠️'}
-          </p>
-          <p className="text-sm text-gray-600">
-            {nextClass.faculty} · {nextClass.room}
-          </p>
-          <p className="text-sm text-gray-500">
-            {nextClass.start_time} - {nextClass.end_time}
-          </p>
+          <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Next class in {countdownText}</p>
+          <p className="text-lg font-semibold">{nextClass.subject} {nextClass.rescheduled && '⚠️'}</p>
+          <p className="text-sm text-gray-600">{nextClass.faculty} · {nextClass.room}</p>
+          <p className="text-sm text-gray-500">{nextClass.start_time} - {nextClass.end_time}</p>
         </div>
       )}
 
@@ -265,35 +244,18 @@ export default function HomePage() {
       )}
 
       <div className="space-y-3">
-        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-          Today's Schedule
-        </h2>
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Today's Schedule</h2>
         <div className="space-y-2">
           {classes.map((c) => {
             const isPast = timeToMinutes(c.end_time) <= nowMinutes
             const isCurrent = c.id === currentClass?.id
             return (
-              <div
-                key={c.id}
-                className={`rounded-xl border p-4 flex justify-between items-center ${
-                  isCurrent
-                    ? 'border-green-300 bg-green-50'
-                    : isPast
-                    ? 'border-gray-100 bg-gray-50 opacity-50'
-                    : 'border-gray-200'
-                }`}
-              >
+              <div key={c.id} className={`rounded-xl border p-4 flex justify-between items-center ${isCurrent ? 'border-green-300 bg-green-50' : isPast ? 'border-gray-100 bg-gray-50 opacity-50' : 'border-gray-200'}`}>
                 <div>
-                  <p className="font-medium">
-                    {c.subject} {c.rescheduled && '⚠️'}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {c.faculty} · {c.room}
-                  </p>
+                  <p className="font-medium">{c.subject} {c.rescheduled && '⚠️'}</p>
+                  <p className="text-sm text-gray-500">{c.faculty} · {c.room}</p>
                 </div>
-                <p className="text-sm text-gray-500">
-                  {c.start_time} - {c.end_time}
-                </p>
+                <p className="text-sm text-gray-500">{c.start_time} - {c.end_time}</p>
               </div>
             )
           })}

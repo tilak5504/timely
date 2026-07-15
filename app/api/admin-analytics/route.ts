@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
 
   const calendarConnections = (calendarLinks || []).filter((c) => c.google_refresh_token).length
 
+  // Build a lookup of device_id -> platform
   const platformByDevice: Record<string, string> = {}
   for (const d of devices || []) {
     if (d.platform) platformByDevice[d.device_id] = d.platform
@@ -76,18 +77,6 @@ export async function POST(req: NextRequest) {
     icsByPlatform[p] = icsDevicesByPlatform[p].size
   }
 
-  // Combined adoption: any device that connected Google OR subscribed via Apple/Outlook
-  const googleDeviceIds = new Set(
-    (calendarLinks || []).filter((c) => c.google_refresh_token).map((c) => c.device_id)
-  )
-  const icsDeviceIds = new Set(
-    (icsEvents || []).filter((e) => e.device_id).map((e) => e.device_id as string)
-  )
-  const combinedAdoptedDevices = new Set([...googleDeviceIds, ...icsDeviceIds])
-  const uniqueIcsDevices = icsDeviceIds.size
-  const overallAdoptionRate =
-    totalDevices > 0 ? Math.round((combinedAdoptedDevices.size / totalDevices) * 100) : 0
-
   const now = Date.now()
   const activeNow = (devices || []).filter(
     (d) => now - new Date(d.last_seen).getTime() < 5 * 60 * 1000
@@ -99,6 +88,7 @@ export async function POST(req: NextRequest) {
     (d) => now - new Date(d.last_seen).getTime() < 7 * 24 * 60 * 60 * 1000
   ).length
 
+  // Build a day-by-day signup count for the last 14 days
   const signupsByDay: Record<string, number> = {}
   for (let i = 13; i >= 0; i--) {
     const d = new Date(now - i * 24 * 60 * 60 * 1000)
@@ -117,8 +107,6 @@ export async function POST(req: NextRequest) {
     activeThisWeek,
     calendarConnections,
     icsFetchCount: icsFetchCount || 0,
-    uniqueIcsDevices,
-    overallAdoptionRate,
     bySection,
     byDivision,
     signupsByDay,
