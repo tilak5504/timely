@@ -197,7 +197,13 @@ export default function HomePage() {
       {mealInfo && mealInfo.meal && (
         <a href="/mess" className="block rounded-2xl border border-orange-200 bg-orange-50 p-4 space-y-1 hover:opacity-90 transition">
           <p className="text-xs font-medium text-orange-700 uppercase tracking-wide">{mealInfo.status === 'current' ? 'Mess open now' : 'Next up'} · {mealInfo.label!.charAt(0).toUpperCase() + mealInfo.label!.slice(1)}</p>
-          <p className="text-sm text-gray-600">{mealInfo.timeLabel}</p>
+          <div className="space-y-1">
+  <p className="text-sm text-gray-600">{mealInfo.timeLabel}</p>
+
+  <p className="text-sm font-medium text-gray-800 line-clamp-2">
+  {todayMenu[mealInfo.label as keyof typeof todayMenu]}
+</p>
+</div>
           <p className="text-xs text-blue-600 underline">View full week's menu →</p>
         </a>
       )}
