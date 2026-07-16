@@ -43,6 +43,8 @@ export default function HomePage() {
   const [calendarStatus, setCalendarStatus] = useState<string | null>(null)
   const [mealInfo, setMealInfo] = useState<ReturnType<typeof getCurrentOrNextMeal> | null>(null)
   const [deviceIdState, setDeviceIdState] = useState('')
+  const [resyncStatus, setResyncStatus] = useState<string | null>(null)
+  const [resyncing, setResyncing] = useState(false)
 
   useEffect(() => {
     const savedSection = localStorage.getItem('timely_section')
@@ -104,6 +106,25 @@ export default function HomePage() {
   function connectGoogleCalendar() {
     const deviceId = localStorage.getItem('timely_device_id')
     window.location.href = `/api/auth/google?deviceId=${deviceId}&section=${section}&mcDivision=${division}&t=${Date.now()}`
+  }
+
+  async function resyncCalendar() {
+    const deviceId = localStorage.getItem('timely_device_id')
+    if (!deviceId) return
+    setResyncing(true)
+    setResyncStatus(null)
+    const res = await fetch('/api/calendar-resync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId }),
+    })
+    const data = await res.json()
+    setResyncing(false)
+    if (data.error) {
+      setResyncStatus('Resync failed: ' + data.error)
+    } else {
+      setResyncStatus('Calendar resynced! ' + data.count + ' classes updated.')
+    }
   }
 
   function switchSection() {
@@ -181,7 +202,8 @@ export default function HomePage() {
   }
 
   const icsHref = '/api/calendar-feed?section=' + section + '&mcDivision=' + division + '&deviceId=' + deviceIdState
-  const todayMenu = getTodayMenu(now)
+  const mealDate = mealInfo?.timeLabel?.includes("tomorrow") ? new Date(now.getTime() + 24*60*60*1000) : now
+  const todayMenu = getTodayMenu(mealDate)
 
   return (
     <div className="min-h-screen p-6 max-w-2xl mx-auto space-y-8">
@@ -195,21 +217,20 @@ export default function HomePage() {
       </div>
 
       {mealInfo && mealInfo.meal && (
-        <a href="/mess" className="block rounded-2xl border border-orange-200 bg-orange-50 p-4 space-y-1 hover:opacity-90 transition">
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 space-y-2">
           <p className="text-xs font-medium text-orange-700 uppercase tracking-wide">{mealInfo.status === 'current' ? 'Mess open now' : 'Next up'} · {mealInfo.label!.charAt(0).toUpperCase() + mealInfo.label!.slice(1)}</p>
-          <div className="space-y-1">
-  <p className="text-sm text-gray-600">{mealInfo.timeLabel}</p>
-
-  <p className="text-sm font-medium text-gray-800 line-clamp-2">
-  {todayMenu[mealInfo.label as keyof typeof todayMenu]}
-</p>
-</div>
-          <p className="text-xs text-blue-600 underline">View full week's menu →</p>
-        </a>
+          <p className="text-sm text-gray-600">{mealInfo.timeLabel}</p>
+          <p className="text-sm">{todayMenu[mealInfo.meal as keyof typeof todayMenu]}</p>
+          <a href="/mess" className="text-xs text-blue-600 underline">View full week's menu →</a>
+        </div>
       )}
 
       {calendarStatus && (
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm">{calendarStatus}</div>
+      )}
+
+      {resyncStatus && (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm">{resyncStatus}</div>
       )}
 
       <div className="space-y-1">

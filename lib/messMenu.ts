@@ -119,7 +119,7 @@ export function getActiveWeekNumber(date: Date = new Date()): 1 | 2 {
   const diffMs = thisMonday.getTime() - ANCHOR_MONDAY.getTime()
   const diffWeeks = Math.round(diffMs / (7 * 24 * 60 * 60 * 1000))
   const isEven = ((diffWeeks % 2) + 2) % 2 === 0
-  return isEven ? 1 : 2
+  return isEven ? 2 : 1
 }
 
 export function getMenuForWeek(weekNumber: 1 | 2): Record<string, DayMenu> {
@@ -168,5 +168,5 @@ export function getCurrentOrNextMeal(date: Date = new Date()): {
     }
   }
 
-  return { status: 'done', meal: null, label: null, timeLabel: null }
+  return { status: 'next', meal: 'breakfast', label: 'breakfast', timeLabel: MEAL_TIMES.breakfast.label + ' (tomorrow)' }
 }
