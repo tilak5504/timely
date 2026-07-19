@@ -12,7 +12,6 @@ export interface ParsedClass {
   rescheduled: boolean
 }
 
-// Day names line up with fixed row pairs in the timetable sheet
 const DAY_ROWS: [string, number, number][] = [
   ['Monday', 3, 4],
   ['Tuesday', 5, 6],
@@ -22,14 +21,20 @@ const DAY_ROWS: [string, number, number][] = [
   ['Saturday', 13, 14],
 ]
 
-// Each time slot maps to 3 columns (0-indexed) where parallel classes are listed
 const SLOTS: [string, string, number[]][] = [
-  ['08:30', '10:00', [1, 2]],
-  ['09:30', '11:00', [3, 4, 5]],
-  ['11:15', '12:45', [6, 7, 8]],
-  ['13:45', '15:15', [10, 11, 12]],
-  ['15:30', '17:00', [13, 14]],
+  ['09:30', '11:00', [1, 2, 3]],
+  ['11:15', '12:45', [4, 5, 6]],
+  ['13:45', '15:15', [8, 9, 10]],
+  ['15:30', '17:00', [11, 12, 13]],
 ]
+
+function isRoomLine(line: string): boolean {
+  return /^L\d/i.test(line) || /floor/i.test(line)
+}
+
+function isFacultyLine(line: string): boolean {
+  return /^(Dr|Prof)\b/i.test(line)
+}
 
 function parseCell(raw: string): Omit<ParsedClass, 'day' | 'startTime' | 'endTime'> | null {
   const lines = raw
@@ -44,15 +49,41 @@ function parseCell(raw: string): Omit<ParsedClass, 'day' | 'startTime' | 'endTim
   if (cleanLines.length < 2) return null
 
   const subjectDivLine = cleanLines[0]
-  const room = cleanLines[cleanLines.length - 1]
-  const faculty = cleanLines.length >= 3 ? cleanLines[1] : 'TBA'
+  const rest = cleanLines.slice(1)
 
-  const divMatch = subjectDivLine.match(/Div\s*-?\s*([A-E])\s*-?\s*(\d)?/i)
-  const divisionCode = divMatch ? (divMatch[1] + (divMatch[2] ?? '')).toUpperCase() : null
-  const subject = subjectDivLine.split(/-?\s*Div/i)[0].trim().replace(/-$/, '').trim()
+  const divMatch = subjectDivLine.match(/Div\s*-?\s*([A-E])\s*(\d)?/i)
+  let divisionCode = divMatch ? (divMatch[1] + (divMatch[2] ?? '')).toUpperCase() : null
+  let subject = subjectDivLine.split(/-?\s*Div/i)[0].trim().replace(/-$/, '').trim()
 
-  // MC-I classes are scheduled per MC Division (e.g. A1, A2)
-  // Everything else is scheduled per whole Section (e.g. A)
+  // Fallback: trailing lone section letter with no "Div" keyword (e.g. "GP Lab B")
+  if (!divisionCode) {
+    const trailingMatch = subject.match(/\b([A-E])$/)
+    if (trailingMatch) {
+      divisionCode = trailingMatch[1]
+      subject = subject.slice(0, trailingMatch.index).trim().replace(/-$/, '').trim()
+    }
+  }
+
+  // Classify remaining lines as room vs faculty by their content, not fixed position
+  let room: string | null = null
+  let faculty: string | null = null
+  for (const line of rest) {
+    if (isRoomLine(line) && room === null) {
+      room = line
+    } else if (isFacultyLine(line) && faculty === null) {
+      faculty = line
+    }
+  }
+  if (room === null && rest.length > 0) {
+    room = rest[rest.length - 1]
+  }
+  if (faculty === null && rest.length >= 2) {
+    faculty = rest[0] !== room ? rest[0] : rest[1] ?? 'TBA'
+  }
+  if (faculty === null) {
+    faculty = 'TBA'
+  }
+
   const isMcDivision = divisionCode !== null && /\d/.test(divisionCode)
 
   return {
@@ -60,7 +91,7 @@ function parseCell(raw: string): Omit<ParsedClass, 'day' | 'startTime' | 'endTim
     section: isMcDivision ? null : divisionCode,
     mcDivision: isMcDivision ? divisionCode : null,
     faculty,
-    room,
+    room: room ?? 'TBA',
     rescheduled,
   }
 }
@@ -93,7 +124,6 @@ export function parseTimetableFile(fileBuffer: ArrayBuffer): ParsedClass[] {
   return entries
 }
 
-// Tries to detect a week label from the filename, e.g. "06_07_2026_to_12_07_2026.xlsx"
 export function detectWeekLabel(filename: string): string {
   const match = filename.match(/(\d{2})[._](\d{2})[._](\d{4})\D+(\d{2})[._](\d{2})[._](\d{4})/)
   if (match) {
@@ -101,39 +131,4 @@ export function detectWeekLabel(filename: string): string {
     return `${d1}/${m1}/${y1} - ${d2}/${m2}/${y2}`
   }
   return 'Unknown week'
-}
-
-// Given a weekLabel like "06/07/2026 - 12/07/2026", returns its start/end dates
-export function parseWeekRange(weekLabel: string): { start: Date; end: Date } | null {
-  const match = weekLabel.match(/(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2})\/(\d{2})\/(\d{4})/)
-  if (!match) return null
-  const [, d1, m1, y1, d2, m2, y2] = match
-  const start = new Date(Number(y1), Number(m1) - 1, Number(d1))
-  const end = new Date(Number(y2), Number(m2) - 1, Number(d2), 23, 59, 59)
-  return { start, end }
-}
-
-// Picks the week label that actually contains today's date.
-// Falls back to the most recent past week, or the nearest future week, if no exact match.
-export function pickCurrentWeekLabel(weekLabels: string[]): string | null {
-  if (weekLabels.length === 0) return null
-  const today = new Date()
-
-  const parsed = weekLabels
-    .map((label) => ({ label, range: parseWeekRange(label) }))
-    .filter((w) => w.range !== null) as { label: string; range: { start: Date; end: Date } }[]
-
-  const exactMatch = parsed.find((w) => today >= w.range.start && today <= w.range.end)
-  if (exactMatch) return exactMatch.label
-
-  // No exact match (e.g. gap between uploads) — pick the most recent week that already started
-  const pastWeeks = parsed.filter((w) => w.range.start <= today)
-  if (pastWeeks.length > 0) {
-    pastWeeks.sort((a, b) => b.range.start.getTime() - a.range.start.getTime())
-    return pastWeeks[0].label
-  }
-
-  // Everything is in the future — pick the nearest upcoming week
-  parsed.sort((a, b) => a.range.start.getTime() - b.range.start.getTime())
-  return parsed[0]?.label ?? weekLabels[0]
 }
