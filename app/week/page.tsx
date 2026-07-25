@@ -17,14 +17,8 @@ interface ClassEntry {
   rescheduled: boolean
 }
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const TIME_SLOTS = [
-  { start: '08:30', end: '10:00', label: '08:30 - 10:00' },
-  { start: '09:30', end: '11:00', label: '09:30 - 11:00' },
-  { start: '11:15', end: '12:45', label: '11:15 - 12:45' },
-  { start: '13:45', end: '15:15', label: '13:45 - 15:15' },
-  { start: '15:30', end: '17:00', label: '15:30 - 17:00' },
-]
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
 const SUBJECT_COLORS: Record<string, string> = {
   'MC-I': 'bg-purple-100 border-purple-300 text-purple-900',
   ME: 'bg-blue-100 border-blue-300 text-blue-900',
@@ -46,7 +40,7 @@ export default function WeekPage() {
   const [division, setDivision] = useState<string | null>(null)
   const [classes, setClasses] = useState<ClassEntry[]>([])
   const [loading, setLoading] = useState(true)
-const [selected, setSelected] = useState<ClassEntry | null>(null)
+  const [selected, setSelected] = useState<ClassEntry | null>(null)
 
   useEffect(() => {
     const savedSection = localStorage.getItem('timely_section')
@@ -75,21 +69,15 @@ const [selected, setSelected] = useState<ClassEntry | null>(null)
         return
       }
 
-      const currentWeekLabel = latestWeek.week_label
-
       const { data, error } = await supabase
-  .from('timetable_entries')
-  .select('*')
-  .eq('week_label', currentWeekLabel)
-  .or(`section.eq.${section},mc_division.eq.${division}`)
-
-console.log('Current Week:', currentWeekLabel)
-console.log('Fetched Classes:', data)
+        .from('timetable_entries')
+        .select('*')
+        .eq('week_label', latestWeek.week_label)
+        .or(`section.eq.${section},mc_division.eq.${division}`)
 
       if (!error && data) {
-  console.log('TIMETABLE DATA', data)
-  setClasses(data as ClassEntry[])
-}
+        setClasses(data as ClassEntry[])
+      }
       setLoading(false)
     }
     fetchWeek()
@@ -103,9 +91,20 @@ console.log('Fetched Classes:', data)
     )
   }
 
+  // Build the list of time slots dynamically from whatever classes actually exist this week
+  const slotMap = new Map<string, { start: string; end: string }>()
+  for (const c of classes) {
+    const key = `${c.start_time}-${c.end_time}`
+    if (!slotMap.has(key)) slotMap.set(key, { start: c.start_time, end: c.end_time })
+  }
+  const timeSlots = Array.from(slotMap.values()).sort((a, b) => a.start.localeCompare(b.start))
+
   function findClass(day: string, start: string) {
     return classes.find((c) => c.day === day && c.start_time === start)
   }
+
+  const activeDays = DAYS.filter((day) => classes.some((c) => c.day === day))
+  const daysToShow = activeDays.length > 0 ? activeDays : DAYS.slice(0, 6)
 
   return (
     <div className="min-h-screen p-4 md:p-6 space-y-6">
@@ -118,23 +117,26 @@ console.log('Fetched Classes:', data)
 
       {/* Desktop grid view */}
       <div className="hidden md:block overflow-x-auto">
-        <div className="grid grid-cols-[100px_repeat(6,1fr)] gap-2 min-w-[900px]">
+        <div
+          className="grid gap-2 min-w-[900px]"
+          style={{ gridTemplateColumns: `100px repeat(${daysToShow.length}, 1fr)` }}
+        >
           <div />
-          {DAYS.map((day) => (
+          {daysToShow.map((day) => (
             <div key={day} className="text-center font-medium text-sm text-gray-500 pb-2">
               {day}
             </div>
           ))}
 
-{TIME_SLOTS.map((slot) => (
-            <Fragment key={slot.label}>
+          {timeSlots.map((slot) => (
+            <Fragment key={slot.start}>
               <div className="text-xs text-gray-400 pt-3">
-                {slot.label}
+                {slot.start} - {slot.end}
               </div>
-              {DAYS.map((day) => {
+              {daysToShow.map((day) => {
                 const cls = findClass(day, slot.start)
                 return (
-                  <div key={day + slot.label} className="min-h-[90px]">
+                  <div key={day + slot.start} className="min-h-[90px]">
                     {cls ? (
                       <button
                         onClick={() => setSelected(cls)}
@@ -160,16 +162,14 @@ console.log('Fetched Classes:', data)
 
       {/* Mobile stacked view */}
       <div className="md:hidden space-y-6">
-        {DAYS.map((day) => {
-          const dayClasses = TIME_SLOTS.map((slot) => findClass(day, slot.start)).filter(
-            Boolean
-          ) as ClassEntry[]
+        {daysToShow.map((day) => {
+          const dayClasses = timeSlots
+            .map((slot) => findClass(day, slot.start))
+            .filter(Boolean) as ClassEntry[]
           return (
             <div key={day} className="space-y-2">
               <h2 className="font-medium text-sm text-gray-500">{day}</h2>
-              {dayClasses.length === 0 && (
-                <p className="text-xs text-gray-400">No classes</p>
-              )}
+              {dayClasses.length === 0 && <p className="text-xs text-gray-400">No classes</p>}
               {dayClasses.map((cls) => (
                 <button
                   key={cls.id}
