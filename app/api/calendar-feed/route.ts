@@ -15,6 +15,7 @@ const DAY_OFFSET_FROM_MONDAY: Record<string, number> = {
   Thursday: 3,
   Friday: 4,
   Saturday: 5,
+  Sunday: 6,
 }
 
 function getWeekMonday(weekLabel: string): Date {

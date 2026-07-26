@@ -31,6 +31,7 @@ const DAY_OFFSET_FROM_MONDAY: Record<string, number> = {
   Thursday: 3,
   Friday: 4,
   Saturday: 5,
+  Sunday: 6,
 }
 
 // weekLabel looks like "06/07/2026 - 12/07/2026" (DD/MM/YYYY)
