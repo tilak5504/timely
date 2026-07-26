@@ -183,7 +183,7 @@ export function parseTimetableFile(fileBuffer: ArrayBuffer): ParsedClass[] {
 }
 
 export function detectWeekLabel(filename: string): string {
-  const match = filename.match(/(\d{2})[._](\d{2})[._](\d{4})\D+(\d{2})[._](\d{2})[._](\d{4})/)
+  const match = filename.match(/(\d{1,2})[._](\d{1,2})[._](\d{4})\D+(\d{1,2})[._](\d{1,2})[._](\d{4})/)
   if (match) {
     const [, d1, m1, y1, d2, m2, y2] = match
     return `${d1}/${m1}/${y1} - ${d2}/${m2}/${y2}`
