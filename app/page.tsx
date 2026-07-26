@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getCurrentOrNextMeal, getTodayMenu } from '@/lib/messMenu'
+import { pickCurrentWeekLabel } from '@/lib/parseTimetable'
 
 interface ClassEntry {
   id: string
@@ -148,19 +149,23 @@ export default function HomePage() {
 
       const today = DAYS[new Date().getDay()]
 
-      const { data: latestWeek } = await supabase
+      const { data: allWeeks } = await supabase
         .from('timetable_entries')
         .select('week_label')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
 
-      if (!latestWeek) {
+      if (!allWeeks || allWeeks.length === 0) {
         setLoading(false)
         return
       }
 
-      const currentWeekLabel = latestWeek.week_label
+      const uniqueWeekLabels = Array.from(new Set(allWeeks.map((w) => w.week_label)))
+      const currentWeekLabel = pickCurrentWeekLabel(uniqueWeekLabels)
+
+      if (!currentWeekLabel) {
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('timetable_entries')
         .select('*')
