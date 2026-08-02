@@ -25,6 +25,17 @@ interface AnalyticsData {
   platformTotals: Record<string, number>
   googleByPlatform: Record<string, number>
   icsByPlatform: Record<string, number>
+  totalFeedback: number
+  averageRating: number
+  ratingCounts: Record<number, number>
+  feedbackList: {
+    id: string
+    rating: number
+    comment: string | null
+    section: string | null
+    mc_division: string | null
+    created_at: string
+  }[]
 }
 
 const EVENT_LABELS: Record<string, string> = {
@@ -277,6 +288,64 @@ export default function AnalyticsPage() {
               <span className="text-gray-400 text-xs">{timeAgo(event.created_at)}</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          Student Feedback
+        </h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-xl border p-4">
+            <p className="text-3xl font-semibold">
+              {data.averageRating > 0 ? data.averageRating.toFixed(1) : '—'} ⭐
+            </p>
+            <p className="text-sm text-gray-500">Average rating ({data.totalFeedback} responses)</p>
+          </div>
+          <div className="rounded-xl border p-4 space-y-1">
+            {[5, 4, 3, 2, 1].map((star) => {
+              const count = data.ratingCounts[star] || 0
+              const max = Math.max(...Object.values(data.ratingCounts), 1)
+              return (
+                <div key={star} className="flex items-center gap-2 text-xs">
+                  <span className="w-8">{star}★</span>
+                  <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-yellow-400 rounded-full"
+                      style={{ width: `${(count / max) * 100}%` }}
+                    />
+                  </div>
+                  <span className="w-6 text-right">{count}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {data.feedbackList.filter((f) => f.comment).length === 0 && (
+            <p className="text-sm text-gray-400">No written comments yet.</p>
+          )}
+          {data.feedbackList
+            .filter((f) => f.comment)
+            .map((f) => (
+              <div key={f.id} className="rounded-lg border p-3 text-sm space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">
+                    {'⭐'.repeat(f.rating)}
+                    {f.section && (
+                      <span className="text-gray-400 font-normal">
+                        {' '}
+                        · Sec {f.section}
+                        {f.mc_division ? ` / ${f.mc_division}` : ''}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-gray-400 text-xs">{timeAgo(f.created_at)}</span>
+                </div>
+                <p className="text-gray-600">{f.comment}</p>
+              </div>
+            ))}
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getCurrentOrNextMeal, getTodayMenu } from '@/lib/messMenu'
 import { pickCurrentWeekLabel } from '@/lib/parseTimetable'
+import FeedbackModal from '@/components/FeedbackModal'
 
 interface ClassEntry {
   id: string
@@ -43,6 +44,7 @@ export default function HomePage() {
   const [now, setNow] = useState(new Date())
   const [calendarStatus, setCalendarStatus] = useState<string | null>(null)
   const [mealInfo, setMealInfo] = useState<ReturnType<typeof getCurrentOrNextMeal> | null>(null)
+  const [showFeedback, setShowFeedback] = useState(false)
   const [deviceIdState, setDeviceIdState] = useState('')
   const [resyncStatus, setResyncStatus] = useState<string | null>(null)
   const [resyncing, setResyncing] = useState(false)
@@ -95,6 +97,10 @@ export default function HomePage() {
         platform,
       })
       .then(() => {})
+
+    if (!localStorage.getItem('timely_feedback_done')) {
+      setShowFeedback(true)
+    }
 
     const params = new URLSearchParams(window.location.search)
     const calParam = params.get('calendar')
@@ -293,6 +299,14 @@ export default function HomePage() {
           })}
         </div>
       </div>
+
+      {showFeedback && section && division && (
+        <FeedbackModal
+          section={section}
+          division={division}
+          onClose={() => setShowFeedback(false)}
+        />
+      )}
     </div>
   )
 }

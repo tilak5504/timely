@@ -100,6 +100,24 @@ export async function POST(req: NextRequest) {
     if (key in signupsByDay) signupsByDay[key]++
   }
 
+  const { data: feedbackRows } = await supabaseAdmin
+    .from('feedback')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  const totalFeedback = feedbackRows?.length || 0
+  const averageRating =
+    totalFeedback > 0
+      ? Math.round(
+          ((feedbackRows || []).reduce((sum, f) => sum + (f.rating || 0), 0) / totalFeedback) * 10
+        ) / 10
+      : 0
+
+  const ratingCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  for (const f of feedbackRows || []) {
+    if (f.rating) ratingCounts[f.rating] = (ratingCounts[f.rating] || 0) + 1
+  }
+
   return NextResponse.json({
     totalDevices,
     activeNow,
@@ -114,5 +132,9 @@ export async function POST(req: NextRequest) {
     platformTotals,
     googleByPlatform,
     icsByPlatform,
+    totalFeedback,
+    averageRating,
+    ratingCounts,
+    feedbackList: feedbackRows || [],
   })
 }
