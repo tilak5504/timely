@@ -98,9 +98,10 @@ export default function HomePage() {
       })
       .then(() => {})
 
-    if (!localStorage.getItem('timely_feedback_done')) {
-      setShowFeedback(true)
-    }
+    // Feedback popup temporarily disabled
+    // if (!localStorage.getItem('timely_feedback_done')) {
+    //   setShowFeedback(true)
+    // }
 
     const params = new URLSearchParams(window.location.search)
     const calParam = params.get('calendar')
