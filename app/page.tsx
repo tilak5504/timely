@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { getCurrentOrNextMeal, getTodayMenu } from '@/lib/messMenu'
 import { pickCurrentWeekLabel } from '@/lib/parseTimetable'
 import FeedbackModal from '@/components/FeedbackModal'
+import { getUpcomingExams, formatExamDate, formatExamTime } from '@/lib/exams'
 
 interface ClassEntry {
   id: string
@@ -216,6 +217,7 @@ export default function HomePage() {
   const icsHref = '/api/calendar-feed?section=' + section + '&mcDivision=' + division + '&deviceId=' + deviceIdState
   const mealDate = mealInfo?.timeLabel?.includes("tomorrow") ? new Date(now.getTime() + 24*60*60*1000) : now
   const todayMenu = getTodayMenu(mealDate)
+  const upcomingExams = getUpcomingExams(now)
 
   return (
     <div className="min-h-screen p-6 max-w-2xl mx-auto space-y-8">
@@ -234,6 +236,18 @@ export default function HomePage() {
           <p className="text-sm text-gray-600">{mealInfo.timeLabel}</p>
           <p className="text-sm">{todayMenu[mealInfo.meal as keyof typeof todayMenu]}</p>
           <a href="/mess" className="text-xs text-blue-600 underline">View full week's menu →</a>
+        </div>
+      )}
+
+      {upcomingExams.length > 0 && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 space-y-2">
+          <p className="text-xs font-medium text-red-700 uppercase tracking-wide">Upcoming Exam</p>
+          <p className="text-lg font-semibold">{upcomingExams[0].subject}</p>
+          <p className="text-sm text-gray-600">
+            {formatExamDate(upcomingExams[0].date)} · {formatExamTime(upcomingExams[0].startTime)} - {formatExamTime(upcomingExams[0].endTime)}
+          </p>
+          <p className="text-sm text-gray-500">{upcomingExams[0].mode}</p>
+          <a href="/exams" className="text-xs text-blue-600 underline">View all exams →</a>
         </div>
       )}
 
