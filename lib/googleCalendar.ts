@@ -131,5 +131,38 @@ export async function syncCalendarForDevice(deviceId: string) {
     }
   }
 
+  // Sync upcoming exams marked for calendar sync, with a 24-hour-before reminder
+  const { EXAMS } = await import('./exams')
+  for (const exam of EXAMS) {
+    if (!exam.syncToCalendar) continue
+    const examDate = new Date(`${exam.date}T${exam.startTime}:00`)
+    if (examDate < new Date()) continue
+
+    const event = await calendar.events.insert({
+      calendarId: 'primary',
+      requestBody: {
+        summary: `📝 ${exam.subject}`,
+        location: exam.mode,
+        description: exam.notes || '',
+        start: { dateTime: `${exam.date}T${exam.startTime}:00`, timeZone: 'Asia/Kolkata' },
+        end: { dateTime: `${exam.date}T${exam.endTime}:00`, timeZone: 'Asia/Kolkata' },
+        reminders: {
+          useDefault: false,
+          overrides: [{ method: 'popup', minutes: 24 * 60 }],
+        },
+      },
+    })
+
+    if (event.data.id) {
+      await supabaseAdmin.from('calendar_events').insert({
+        device_id: deviceId,
+        timetable_entry_id: null,
+        google_event_id: event.data.id,
+        week_label: `exam-${exam.id}`,
+      })
+      created++
+    }
+  }
+
   return { count: created }
 }

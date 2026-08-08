@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { EXAMS } from '@/lib/exams'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -101,6 +102,29 @@ export async function GET(req: NextRequest) {
     })
     .join('\r\n')
 
+
+  const examEvents = EXAMS.filter((e) => e.syncToCalendar)
+    .map((exam) => {
+      const start = exam.date.replace(/-/g, '') + 'T' + exam.startTime.replace(':', '') + '00'
+      const end = exam.date.replace(/-/g, '') + 'T' + exam.endTime.replace(':', '') + '00'
+      return [
+        'BEGIN:VEVENT',
+        `UID:${exam.id}@timely`,
+        `DTSTART;TZID=Asia/Kolkata:${start}`,
+        `DTEND;TZID=Asia/Kolkata:${end}`,
+        `SUMMARY:Exam - ${exam.subject}`,
+        `LOCATION:${exam.mode}`,
+        `DESCRIPTION:${exam.notes || ''}`,
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:Exam reminder',
+        'TRIGGER:-P1D',
+        'END:VALARM',
+        'END:VEVENT',
+      ].join('\r\n')
+    })
+    .join('\r\n')
+
   const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -116,6 +140,7 @@ export async function GET(req: NextRequest) {
     'END:STANDARD',
     'END:VTIMEZONE',
     events,
+    examEvents,
     'END:VCALENDAR',
   ].join('\r\n')
 

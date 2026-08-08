@@ -6,6 +6,7 @@ export interface ExamEntry {
   endTime: string
   mode: string
   notes?: string
+  syncToCalendar?: boolean
 }
 
 export const EXAMS: ExamEntry[] = [
@@ -17,6 +18,7 @@ export const EXAMS: ExamEntry[] = [
     endTime: '22:15',
     mode: 'Online',
     notes: 'Quiz link will be shared via Outlook Forms prior to the assessment.',
+    syncToCalendar: true,
   },
   {
     id: 'microecon-test',
@@ -25,6 +27,7 @@ export const EXAMS: ExamEntry[] = [
     startTime: '17:00',
     endTime: '17:45',
     mode: 'Pen and paper',
+    syncToCalendar: true,
   },
   {
     id: 'faa-test',
@@ -34,6 +37,7 @@ export const EXAMS: ExamEntry[] = [
     endTime: '17:45',
     mode: 'Pen and paper',
     notes: 'Time not officially confirmed — likely 5:00-5:45 PM.',
+    syncToCalendar: true,
   },
   {
     id: 'sidm-test-2',
@@ -42,6 +46,7 @@ export const EXAMS: ExamEntry[] = [
     startTime: '17:00',
     endTime: '17:30',
     mode: 'Pen and paper',
+    syncToCalendar: false,
   },
 ]
 
