@@ -20,14 +20,15 @@ interface ClassEntry {
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 const SUBJECT_COLORS: Record<string, string> = {
-  'MC-I': 'bg-purple-100 border-purple-300 text-purple-900',
   ME: 'bg-blue-100 border-blue-300 text-blue-900',
-  FAA: 'bg-amber-100 border-amber-300 text-amber-900',
-  OB: 'bg-pink-100 border-pink-300 text-pink-900',
-  SIDM: 'bg-teal-100 border-teal-300 text-teal-900',
-  EIM: 'bg-orange-100 border-orange-300 text-orange-900',
-  CCL: 'bg-indigo-100 border-indigo-300 text-indigo-900',
-  'MM-I': 'bg-emerald-100 border-emerald-300 text-emerald-900',
+  ICLA: 'bg-indigo-100 border-indigo-300 text-indigo-900',
+  'MC-II': 'bg-purple-100 border-purple-300 text-purple-900',
+  MADM: 'bg-teal-100 border-teal-300 text-teal-900',
+  VRC: 'bg-cyan-100 border-cyan-300 text-cyan-900',
+  MM: 'bg-emerald-100 border-emerald-300 text-emerald-900',
+  'OB-II': 'bg-pink-100 border-pink-300 text-pink-900',
+  STD: 'bg-amber-100 border-amber-300 text-amber-900',
+  MOBD: 'bg-orange-100 border-orange-300 text-orange-900',
 }
 
 function colorFor(subject: string) {
