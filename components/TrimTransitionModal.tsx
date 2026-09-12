@@ -12,8 +12,8 @@ export default function TrimTransitionModal({ onClose }: Props) {
         <div>
           <h3 className="text-2xl font-bold">Trim 1 didn't kill you.</h3>
           <p className="text-sm text-gray-500 mt-1">
-            Barely. But hey, you made it. Assignments survived, sleep schedule did not.
-            Onwards to Trim 2 — same chaos, new subjects.
+            Barely. But hey, relax — you made it. Sleep schedule's gone, but that's a story
+            for another trim. Let's not go there. Onwards to Trim 2.
           </p>
         </div>
         <button
