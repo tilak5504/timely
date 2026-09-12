@@ -7,6 +7,7 @@ import { getCurrentOrNextMeal, getTodayMenu } from '@/lib/messMenu'
 import { pickCurrentWeekLabel } from '@/lib/parseTimetable'
 import FeedbackModal from '@/components/FeedbackModal'
 import { getUpcomingExams, formatExamDate, formatExamTime } from '@/lib/exams'
+import TrimTransitionModal from '@/components/TrimTransitionModal'
 
 interface ClassEntry {
   id: string
@@ -46,6 +47,7 @@ export default function HomePage() {
   const [calendarStatus, setCalendarStatus] = useState<string | null>(null)
   const [mealInfo, setMealInfo] = useState<ReturnType<typeof getCurrentOrNextMeal> | null>(null)
   const [showFeedback, setShowFeedback] = useState(false)
+  const [showTrimTransition, setShowTrimTransition] = useState(false)
   const [deviceIdState, setDeviceIdState] = useState('')
   const [resyncStatus, setResyncStatus] = useState<string | null>(null)
   const [resyncing, setResyncing] = useState(false)
@@ -103,6 +105,10 @@ export default function HomePage() {
     // if (!localStorage.getItem('timely_feedback_done')) {
     //   setShowFeedback(true)
     // }
+
+    if (!localStorage.getItem('timely_trim2_seen')) {
+      setShowTrimTransition(true)
+    }
 
     const params = new URLSearchParams(window.location.search)
     const calParam = params.get('calendar')
@@ -320,6 +326,15 @@ export default function HomePage() {
           section={section}
           division={division}
           onClose={() => setShowFeedback(false)}
+        />
+      )}
+
+      {showTrimTransition && (
+        <TrimTransitionModal
+          onClose={() => {
+            localStorage.setItem('timely_trim2_seen', 'true')
+            setShowTrimTransition(false)
+          }}
         />
       )}
     </div>

@@ -21,12 +21,16 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 const SUBJECT_COLORS: Record<string, string> = {
   ME: 'bg-blue-100 border-blue-300 text-blue-900',
+  MA: 'bg-blue-100 border-blue-300 text-blue-900',
   ICLA: 'bg-indigo-100 border-indigo-300 text-indigo-900',
   'MC-II': 'bg-purple-100 border-purple-300 text-purple-900',
+  'MC_II': 'bg-purple-100 border-purple-300 text-purple-900',
   MADM: 'bg-teal-100 border-teal-300 text-teal-900',
   VRC: 'bg-cyan-100 border-cyan-300 text-cyan-900',
   MM: 'bg-emerald-100 border-emerald-300 text-emerald-900',
+  'MM-II': 'bg-emerald-100 border-emerald-300 text-emerald-900',
   'OB-II': 'bg-pink-100 border-pink-300 text-pink-900',
+  'OB -II': 'bg-pink-100 border-pink-300 text-pink-900',
   STD: 'bg-amber-100 border-amber-300 text-amber-900',
   MOBD: 'bg-orange-100 border-orange-300 text-orange-900',
 }
