@@ -8,6 +8,7 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState('')
 
   const [file, setFile] = useState<File | null>(null)
+  const [manualWeekLabel, setManualWeekLabel] = useState('')
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState<{ success?: boolean; count?: number; weekLabel?: string; error?: string } | null>(null)
 
@@ -25,6 +26,9 @@ export default function AdminPage() {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('password', password)
+    if (manualWeekLabel.trim()) {
+      formData.append('manualWeekLabel', manualWeekLabel.trim())
+    }
 
     const res = await fetch('/api/upload-timetable', {
       method: 'POST',
@@ -70,6 +74,19 @@ export default function AdminPage() {
         onChange={(e) => setFile(e.target.files?.[0] || null)}
         className="block"
       />
+
+      <div className="space-y-1">
+        <label className="text-sm text-gray-600">
+          Manual week label (optional — use for recurring templates without dates, format: DD/MM/YYYY - DD/MM/YYYY)
+        </label>
+        <input
+          type="text"
+          placeholder="e.g. 01/09/2026 - 30/11/2026"
+          value={manualWeekLabel}
+          onChange={(e) => setManualWeekLabel(e.target.value)}
+          className="w-full border rounded-lg px-3 py-2 text-sm"
+        />
+      </div>
 
       <button
         onClick={handleUpload}

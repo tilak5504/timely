@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
     const file = formData.get('file') as File | null
     const password = formData.get('password') as string | null
+    const manualWeekLabel = formData.get('manualWeekLabel') as string | null
 
     if (password !== process.env.ADMIN_PASSWORD) {
       return NextResponse.json({ error: 'Incorrect admin password' }, { status: 401 })
@@ -38,7 +39,7 @@ console.log(
     }))
 )
 
-const weekLabel = detectWeekLabel(file.name)
+const weekLabel = manualWeekLabel?.trim() ? manualWeekLabel.trim() : detectWeekLabel(file.name)
 
     // Clear out any existing entries for this week before inserting fresh ones
     await supabaseAdmin.from('timetable_entries').delete().eq('week_label', weekLabel)
