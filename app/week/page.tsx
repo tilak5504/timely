@@ -116,7 +116,7 @@ export default function WeekPage() {
       <div>
         <h1 className="text-2xl font-semibold">Weekly Timetable</h1>
         <p className="text-muted-foreground">
-          Section {section} · Division {division}
+          Section {section}
         </p>
       </div>
 
