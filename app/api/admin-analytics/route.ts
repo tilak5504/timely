@@ -46,6 +46,21 @@ export async function POST(req: NextRequest) {
   }
 
   const calendarConnections = (calendarLinks || []).filter((c) => c.google_refresh_token).length
+  const uniqueIcsDevices = new Set(
+    (icsEvents || [])
+      .map((event) => event.device_id)
+      .filter((deviceId): deviceId is string => Boolean(deviceId))
+  ).size
+  const adoptedDeviceIds = new Set<string>([
+    ...(calendarLinks || [])
+      .filter((link) => link.google_refresh_token && link.device_id)
+      .map((link) => link.device_id),
+    ...(icsEvents || [])
+      .map((event) => event.device_id)
+      .filter((deviceId): deviceId is string => Boolean(deviceId)),
+  ])
+  const overallAdoptionRate =
+    totalDevices > 0 ? Math.round((adoptedDeviceIds.size / totalDevices) * 100) : 0
 
   // Build a lookup of device_id -> platform
   const platformByDevice: Record<string, string> = {}
@@ -124,6 +139,8 @@ export async function POST(req: NextRequest) {
     activeToday,
     activeThisWeek,
     calendarConnections,
+    uniqueIcsDevices,
+    overallAdoptionRate,
     icsFetchCount: icsFetchCount || 0,
     bySection,
     byDivision,

@@ -14,96 +14,96 @@ export const MEAL_TIMES = {
 
 export const WEEK_1: Record<string, DayMenu> = {
   Monday: {
-    breakfast: 'Aloo Paratha, Curd, Pickle, Vermicelli, Bread, Butter, Jam, Tea & Coffee',
-    lunch: 'Black Chana Masala Fry, Palak Paneer, Chapati, Steam Rice, Dal Tadka, Rasam, Buttermilk, Salad, Papad & Pickle',
-    snacks: 'Dhokla, Tea & Coffee, Fruits',
-    dinner: 'Dal Makhani, Jeera Rice, Methi Aloo Sabzi, Chapati, Salad, Pickle, Jalebi',
+    breakfast: 'Paneer Paratha, Curd, Pickle, Vermicelli, Bread, Butter, Jam, Tea & Coffee',
+    lunch: 'Black Chana Masala Fry, Paneer Methi Malai, Chapati, Steam Rice, Dal Tadka, Rasam, Buttermilk, Salad, Papad & Pickle',
+    snacks: 'Hakka Noodles, Tea & Coffee',
+    dinner: 'Aloo Masala, Lauki Dal, Steam Rice, Chapati, Dal Makhani, Salad, Pickle, Shrikhand',
   },
   Tuesday: {
-    breakfast: 'Idli Wada Sambar, Tomato Spicy Chutney, Bread, Butter, Jam, Tea & Coffee',
-    lunch: 'Soyabean, Dum Aloo, Dal Fry, Steam Rice, Chapati, Salad, Papad, Pickle, Boondi Raita, Sambhar',
+    breakfast: 'Idli Wada Sambar, Coconut Chutney, Bread, Butter, Jam, Tea & Coffee',
+    lunch: 'Rajma Masala, Rajasthani Bhindi, Dal Masoor, Jeera Rice, Sambhar, Chapati, Salad, Papad, Curd',
     snacks: 'Vada Pav, Green Chutney, Red Chutney, Deep Fried Green Chilli, Tea & Coffee',
-    dinner: 'Corn Capsicum Masala, Chana Dal, Jeera Rice, Chapati, Salad, Sevai Kheer',
+    dinner: 'Baby Corn Capsicum Masala, Chana Dal, Jeera Rice, Chapati, Salad, Sevai Kheer',
   },
   Wednesday: {
     breakfast: 'Aloo Sabji, Poori, Poha, Bread, Butter, Jam, Tea & Coffee',
-    lunch: 'Cabbage Matar Dry, Kadhi Pakoda, Dal Fry, Chapati, Jeera Rice, Sambhar, Nimbu Paani, Chopped Onions, Papad',
-    snacks: 'Masala Maggi, Tea & Coffee',
-    dinner: 'Egg Masala, Kadhai Paneer, Dal Tadka, Steam Rice, Chapati, Salad, Pickle, Besan Barfi',
+    lunch: 'Cabbage Matar Dry, Mix Veg, Dal Fry, Chapati, Jeera Rice, Sambar, Nimbu Paani, Chopped Onions, Papad',
+    snacks: 'Veg Sandwich, Tea & Coffee, Fruits',
+    dinner: 'Egg Masala, Kadhai Paneer, Dal Tadka, Steam Rice, Chapati, Salad, Pickle, Gulab Jamun',
   },
   Thursday: {
     breakfast: 'Misal Pav, Upma, Farsan, Bread, Jam, Butter, Tea & Coffee',
     lunch: 'Poori, Pindi Chole Masala, Green Peas Pulao, Lassi, Chopped Onions, Papad',
-    snacks: 'Hakka Noodles, Tea & Coffee',
-    dinner: 'Rajasthani Dahi, Sev Tamatar, Steam Rice, Chapati, Salad, Pickle, Dahi Vada',
+    snacks: 'Masala Maggi, Tea & Coffee',
+    dinner: 'Rajasthani Dahi, Baigan Kaala Masala, Steam Rice, Chapati, Salad, Pickle, Shahi Tukda',
   },
   Friday: {
     breakfast: 'Idli Wada Sambar, Tomato Spicy Chutney, Bread, Butter, Jam, Tea & Coffee',
-    lunch: 'Aloo Gobhi, Steam Rice, Dal Makhani, Chapati, Salad, Pickle, Rasam, Papad, Nimbu Paani',
-    snacks: 'White Bread Cutlet, Green Chutney, Fruits, Tea & Coffee',
-    dinner: 'Tomato Rice, Matki Gravy, Veg Kolhapuri, Chapati, Salad, Onion Raita, Shahi Tukda',
+    lunch: 'Aloo Gobhi, Steam Rice, Dal Makhani, Chapati, Salad, Pickle, Rasam, Papad, Pineapple Juice',
+    snacks: 'Pani Puri, Hot Ragda, Tea & Coffee',
+    dinner: 'Steam Rice, Matki Gravy, Veg Kolhapuri, Chapati, Salad, Onion Raita, Dahi Vada',
   },
   Saturday: {
-    breakfast: 'Thepla, Upma Sev, Bread, Jam, Butter, Tea & Coffee',
-    lunch: 'Rajma Masala, Rajasthani Bhindi, Dal Masoor, Jeera Rice, Sambhar, Chapati, Salad, Papad, Curd',
+    breakfast: 'Thepla, Pongal, Tomato Chutney, Bread, Jam, Butter, Tea & Coffee',
+    lunch: 'Soyabean, Dum Aloo, Dal Fry, Steam Rice, Chapati, Salad, Papad, Pickle, Boondi Raita, Sambhar',
     snacks: 'Macaroni, Tea & Coffee',
     dinner: 'Fried Rice, Egg Fried Rice, Manchurian Semi Gravy, Chopped Onion, Ice Cream',
   },
   Sunday: {
-    breakfast: 'Tarri Poha, Chopped Onions, Tea & Coffee, Boiled Egg, Banana, Bread Butter Jam',
-    lunch: 'Aloo Puri, Veg Pulao, Methi Dal, Chopped Onion, Papad, Pickle, Lassi',
+    breakfast: 'Tarri Poha, Chopped Onions, Tea & Coffee, Boiled Egg, Banana, Bread, Butter, Jam',
+    lunch: 'Chole Bhature, Jeera Rice, Dal Tadka, Chopped Onion, Papad, Pickle, Lassi',
     snacks: 'Kachori Chaat (Imly Chutney), Tea & Coffee',
-    dinner: 'Paneer Do Payaza, Soyabean Spicy Biryani, Chopped Onion, Raita, Fruit Custard, Roti',
+    dinner: 'Paneer Do Pyaza, Soyabean Biryani Spicy, Chopped Onion, Raita, Coconut Barfi, Roti',
   },
 }
 
 export const WEEK_2: Record<string, DayMenu> = {
   Monday: {
-    breakfast: 'Paneer Paratha, Curd, Pickle, Upma Sev, Bread, Butter, Jam, Tea & Coffee',
-    lunch: 'Kadhi Pakoda, Masoor Dal Dry, Steam Rice, Chapati, Salad, Papad & Pickle, Nimbu Paani, Sambhar',
+    breakfast: 'Gobi Paratha, Curd, Pickle, Upma Sev, Bread, Butter, Jam, Tea & Coffee',
+    lunch: 'Paneer Butter Masala, Lobia Dry, Chapati, Jeera Rice, Dal Fry, Rasam, Chopped Onions, Papad, Buttermilk',
     snacks: 'Dabeli, Green and Imly Chutney, Tea & Coffee',
-    dinner: 'Aloo Masala, Lauki Dal, Steam Rice, Chapati, Dal Makhani, Salad, Pickle, Shrikhand',
+    dinner: 'Dal Makhani, Jeera Rice, Rajasthani Bhindi, Chapati, Salad, Pickle, Jalebi',
   },
   Tuesday: {
     breakfast: 'Idli Wada Sambar, Chutney, Bread, Butter, Jam, Tea & Coffee',
-    lunch: 'Baigan Masala, Mix Veg, Dal Kolhapuri, Steam Rice, Papad, Chapati, Rasam, Masala Chhach',
-    snacks: 'Masala Maggi, Tea & Coffee',
-    dinner: 'Tomato Bharta, Tawa Vegetable, Dal Tadka, Steam Rice, Chapati, Salad, Pickle, Dry Fruit Sheera',
+    lunch: 'Black Chana Masala Fry, Dum Aloo, Dal Tadka, Steam Rice, Chapati, Salad, Papad, Pickle, Curd, Sambhar',
+    snacks: 'Sweet Corn Chaat, Fruits, Tea & Coffee',
+    dinner: 'Soyabean Sabzi, Lobia Masala (Sev Bhaji), Dal Tadka, Steam Rice, Chapati, Salad, Pickle, Besan Barfi',
   },
   Wednesday: {
-    breakfast: 'Methi Paratha, Coconut Chutney, Upma Sev, Bread, Butter, Jam, Tea & Coffee',
-    lunch: 'Palak Poori, Aloo-Chole Masala, Jeera Rice, Dal Lasuni, Lassi, Chopped Onions, Papad',
-    snacks: 'Masala Idli, Fruits, Tea & Coffee',
+    breakfast: 'Matar Kulche, Onions, Upma Sev, Bread, Butter, Jam, Tea & Coffee',
+    lunch: 'Baigan Masala, Soyabean Dry, Dal Kolhapuri, Steam Rice, Papad, Chapati, Rasam, Masala Chhach',
+    snacks: 'Masala Maggi, Tea & Coffee',
     dinner: 'Paneer Lababdar, Egg Masala, Dal Tadka, Steam Rice, Chapati, Salad, Pickle, Moong Dal Halwa',
   },
   Thursday: {
-    breakfast: 'Uttapam, Aloo Curry, Tomato Chutney, Vermicelli, Tea & Coffee',
-    lunch: 'Black Chana Masala, Dum Aloo, Dal Tadka, Steam Rice, Chapati, Salad, Papad, Pickle, Curd, Sambhar',
-    snacks: 'Ragda Patties, Chutney, Tea & Coffee',
-    dinner: 'Sev Bhaji, Aloo Gobi Fry, Steam Rice, Dal Kolhapuri, Chapati, Salad, Pickle & Gulab Jamun',
+    breakfast: 'Uttapam, Aloo Curry, Coconut Chutney, Vermicelli, Tea & Coffee',
+    lunch: 'Palak Poori, Chole Masala, Jeera Rice, Dal Lasuni, Lassi, Chopped Onions, Papad',
+    snacks: 'White Sauce Pasta, Fruits, Tea & Coffee',
+    dinner: 'Corn Capsicum Masala, Aloo Gobi Fry, Steam Rice, Dal Kolhapuri, Chapati, Salad, Pickle & Gulab Jamun',
   },
   Friday: {
-    breakfast: 'Misal Pav, Aloo Sabudana Khichdi, Farsan, Bread, Jam, Butter, Tea & Coffee',
+    breakfast: 'Misal Pav, Sabudana Khichdi, Farsan, Bread, Jam, Butter, Tea & Coffee',
     lunch: 'Rajma Masala, Rajasthani Bhindi, Chapati, Jeera Rice, Dal Fry, Rasam, Chopped Onions, Papad, Nimbu Paani',
     snacks: 'Pani Puri, Hot Ragda, Tea & Coffee',
-    dinner: 'Palak Paneer, Steam Rice, Dal Kolhapuri, Chapati, Salad, Pickle, Lauki Halwa',
+    dinner: 'Kadai Paneer, Steam Rice, Dal Kolhapuri, Chapati, Salad, Pickle, Lauki Halwa',
   },
   Saturday: {
     breakfast: 'Idli Wada Sambar, Chutney, Bread, Butter, Jam, Tea & Coffee',
-    lunch: 'Paneer Butter Masala, Lobia Masala, Chapati, Jeera Rice, Dal Fry, Rasam, Chopped Onions, Papad, Buttermilk',
-    snacks: 'Bhel Puri, Fruits, Tea & Coffee',
+    lunch: 'Kadhi Pakoda, Masoor Dal Dry, Steam Rice, Chapati, Salad, Papad & Pickle, Nimbu Paani, Sambhar',
+    snacks: 'Bread Pakoda, Imly Chutney, Green Chutney, Tea & Coffee',
     dinner: 'Fried Rice, Egg Fried Rice, Manchurian Semi Gravy, Chopped Onion, Ice Cream',
   },
   Sunday: {
-    breakfast: 'Poha, Coconut Chutney, Banana, Tea & Coffee, Boiled Egg, Bread Butter Jam',
+    breakfast: 'Poha, Coconut Chutney, Banana, Tea & Coffee, Boiled Egg, Bread, Butter, Jam',
     lunch: 'Chole Bhature, Veg Pulao, Methi Dal, Chopped Onion, Papad, Pickle, Lassi',
-    snacks: 'Singaporean Noodles, Tea & Coffee',
+    snacks: 'Ragda Patties, Chutney, Tea & Coffee',
     dinner: 'Pav Bhaji, Paneer Handi Biryani Spicy, Chopped Onion, Mix Vegetable Raita, Fruit Custard',
   },
 }
 
-// Anchor: Monday, August 3, 2026 is the confirmed start of "1st Week Aug 2026" (Week 1)
-const ANCHOR_MONDAY = new Date(2026, 7, 3) // month is 0-indexed: 7 = August
+// Anchor: Monday, October 26, 2026 is the start of Week 1 of the October menu
+const ANCHOR_MONDAY = new Date(2026, 9, 26) // month is 0-indexed: 9 = October
 
 function getMondayOf(date: Date): Date {
   const d = new Date(date)
