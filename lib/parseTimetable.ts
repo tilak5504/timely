@@ -211,8 +211,16 @@ export function pickCurrentWeekLabel(weekLabels: string[]): string | null {
     .map((label) => ({ label, range: parseWeekRange(label) }))
     .filter((w) => w.range !== null) as { label: string; range: { start: Date; end: Date } }[]
 
-  const exactMatch = parsed.find((w) => today >= w.range.start && today <= w.range.end)
-  if (exactMatch) return exactMatch.label
+  const matches = parsed.filter((w) => today >= w.range.start && today <= w.range.end)
+  if (matches.length > 0) {
+    // If several ranges contain today, prefer the narrowest (most specific) one
+    matches.sort(
+      (a, b) =>
+        a.range.end.getTime() - a.range.start.getTime() -
+        (b.range.end.getTime() - b.range.start.getTime())
+    )
+    return matches[0].label
+  }
 
   const pastWeeks = parsed.filter((w) => w.range.start <= today)
   if (pastWeeks.length > 0) {
