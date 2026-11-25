@@ -160,6 +160,8 @@ export default function HomePage() {
       const { data: allWeeks } = await supabase
         .from('timetable_entries')
         .select('week_label')
+        .order('created_at', { ascending: false })
+        .limit(1000)
 
       if (!allWeeks || allWeeks.length === 0) {
         setLoading(false)
